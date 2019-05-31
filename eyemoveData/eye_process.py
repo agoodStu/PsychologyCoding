@@ -2,19 +2,10 @@
 """
 Created on Wed May  1 20:52:57 2019
 
-@author: Yejishan
+@author: Ye
 """
 
-"""
-______        __   _______  ___ _____ _____ _   _  ___  _   _ 
-| ___ \       \ \ / /  ___||_  |_   _/  ___| | | |/ _ \| \ | |
-| |_/ /_   _   \ V /| |__    | | | | \ `--.| |_| / /_\ \  \| |
-| ___ \ | | |   \ / |  __|   | | | |  `--. \  _  |  _  | . ` |
-| |_/ / |_| |   | | | |__/\__/ /_| |_/\__/ / | | | | | | |\  |
-\____/ \__, |   \_/ \____|____/ \___/\____/\_| |_|_| |_|_| \_/
-        __/ |                                                 
-       |___/                                                  
-"""
+
 import os
 import pandas as pd
 import numpy as np
@@ -37,6 +28,7 @@ import logging
    解决思路：在Event列处理完成后通过fillna(-1)实现
 5. 删除特定行，如Event==1, Event=='Event'等
    解决思路：获取特定行的index，使用tolist()转为列表，通过drop()删除
+6. 将TimeStamp列时间递增。即第二个试次的开始时间为第一个试次的结束时间。
 """
 
 file_src = r'E:\expdata\exp1\formal\test'
@@ -44,6 +36,7 @@ output_src = r'E:\expdata\exp1\formal\eyemoveConvert'
 os.chdir(file_src)
 logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s -  \
                     %(levelname)s - %(message)s')
+
 
 def convert_to_pd(files):
     """
@@ -92,7 +85,9 @@ def data_process(df):
     df['Event'] = df['Event'].fillna('Event')
 
     df = df.drop(df[df.Event == 'Event'].index.tolist())
-    df = df.drop(df[(df.Event == '1') | (df.Event == '0')].index.tolist())
+    df = df.drop(df[(df.Event == 1) | (df.Event == 0)].index.tolist())
+    df = df.drop(df[(df.Event == 33330) | (df.Event == 33331)
+        | (df.Event == 33332)].index.tolist())
 
     df.loc[:, ['GazePointXLeft', 'GazePointXRight', 'GazePointX']] = df.loc[:,
               ['GazePointXLeft', 'GazePointXRight', 'GazePointX']] + 960
@@ -105,6 +100,30 @@ def data_process(df):
     return df
 
 
+def add_time(df):
+    """
+    将TimeStamp列时间改为顺序递增.
+    
+    :param df:待处理数据框
+    """
+    t = df['Event'].diff()  # 对trigger列差分
+    trigger_df = t[(t != 0) & (t != 1) & (t.notnull())]
+    trigger_pos = trigger_df.index.tolist()
+    
+    tp = 0  # 计数
+    while tp <= len(trigger_pos):
+        if tp < len(trigger_pos) - 1:
+            df['TimeStamp'].iloc[trigger_pos[tp]:trigger_pos[tp+1]] = df['TimeStamp'].iloc[trigger_pos[tp]:
+                trigger_pos[tp+1]] + df['TimeStamp'].iloc[trigger_pos[tp]-1]
+        tp += 1
+        
+    df['TimeStamp'].iloc[trigger_pos[-1]:len(df['TimeStamp'])+1] = df['TimeStamp'].iloc[trigger_pos[-1]:
+        len(df['TimeStamp'])+1] + df['TimeStamp'].iloc[trigger_pos[-1]-1]
+        
+    return df
+
+
+
 def main():
     file_lists = get_file_list(file_src)
     try:
@@ -112,10 +131,13 @@ def main():
             file_name = i.split('.')[0] + '_convert.xlsx'
             df_convert = convert_to_pd(i)
             df_out = data_process(df_convert)
+            df_out = add_time(df_out.reset_index(drop=True))
             df_out.to_excel(output_src + os.sep + file_name, index=False)
             logging.debug(i.split('.')[0] + ' is converted!')
     except:
         logging.debug(i.split('.')[0] + ' has some problems!')
+    
+    return df_out
 
 
 if __name__ == "__main__":
