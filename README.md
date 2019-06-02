@@ -13,8 +13,13 @@
 
 处理实验中的眼动数据。
 
+### crossSpatialCueingTask
+
+跨通道空间线索任务。
+
 
 
 ## Updata Log
 
 - 二〇一九年五月十六日 22:05:52，更新eyemoveData
+- 二〇一九年六月二日 11:00:37，添加crossSpatialCueingTask
