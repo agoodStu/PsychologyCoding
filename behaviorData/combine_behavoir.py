@@ -12,9 +12,11 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s -  \
                     %(levelname)s - %(message)s')
-file_src = r'E:\expdata\exp1\formal\behavior'
+file_src = r'E:\expdata\exp2\data'
 output_src = ''
 os.chdir(file_src)
+
+trial_length = 66  # 每个block的试次数
 
 
 def get_file_list(file_src):
@@ -33,7 +35,7 @@ def get_file_list(file_src):
 
 
 def generate_df(file):
-    """
+    """ 
     生成汇总列表.
 
     :param file: 待处理文件
@@ -41,19 +43,19 @@ def generate_df(file):
     df2 = pd.DataFrame()
     df = pd.read_csv(file)[3:]
 
-    df2['participant'] = df['participant']
-    df2['block'] = pd.Series([int(file.split('_')[1][0])] * 69)
-    df2['correct'] = df['main_resp.corr']
-    df2['secResp'] = df['sec_resp.corr']
-    df2['rt'] = df['main_resp.rt']
-    df2['trigger'] = df['trigger']
+    df2['participant'] = [df['participant'].iloc[1]] * trial_length
+    df2['block'] = pd.Series([int(file.split('.')[0][-1])] * trial_length)
+    df2['correct'] = pd.Series(df['main_resp.corr']).reset_index(drop=True)
+#    df2['secResp'] = df['sec_resp.corr']
+    df2['rt'] = pd.Series(df['main_resp.rt']).reset_index(drop=True)
+    df2['trigger'] = pd.Series(df['trigger']).reset_index(drop=True)
 
     return df2
 
 
 def main():
     df_out = pd.DataFrame(columns=['participant', 'block', 'correct',
-                                   'secResp', 'rt', 'trigger'])
+                                   'rt', 'trigger'])
 
     file_lists = get_file_list(file_src)
     for i in file_lists:
