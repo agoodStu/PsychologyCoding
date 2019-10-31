@@ -40,9 +40,15 @@ logging.basicConfig(level=logging.DEBUG, format=' %(asctime)s -  \
 
 def convert_to_pd(files):
     """
+    input
+    -----
     用于将眼动文件转为pandas的DataFrame.
 
     :param file_list:待转换的眼动文件
+    
+    return
+    ------
+    转换后的文件
     """
     with open(files) as f:
         data = f.read().split('\n')[6:]
@@ -50,12 +56,34 @@ def convert_to_pd(files):
     columns = data[0].split('\t')
     data_list = [i.split('\t') for i in data]
 
+    # 对df赋值
     df = pd.DataFrame(data_list[1:], columns=columns)
-    df = df.drop(df[(df.GazePointXLeft.isnull()) | 
-        (df.TimeStamp == 'TimeStamp')].index.tolist())
+    
+    # trial的计算：因为每个试次时分开写入，所以其中都会包含"TimeStamp"行
+    # 以及"Session End"行
+    # 因此，将"TimeStamp"和"Session End"中间的数据记为一个试次
+    # 在新添trial列
+    df['Trial'] = np.nan
+    # 试次开始行index    
+    time_loc = df['TimeStamp'].loc[df['TimeStamp'] == 'TimeStamp'].index
+    # 试次结束行index
+    sessi_end = df['TimeStamp'].loc[df['TimeStamp'] == 'Session End'].index
+    # 因为第一行数据是数据，所以插入0
+    time_loc = time_loc.insert(0, 0)
+    block_loc = list(zip(time_loc, sessi_end))
+    
+    n = 1
+    for i in block_loc:
+        df['Trial'].iloc[i[0]: i[1]] = n
+        n = n + 1
+
+    df = df.drop(df[(df.GazePointXLeft.isnull()) |
+        (df.TimeStamp == 'TimeStamp') |
+        (df.GazePointXLeft == '')].index.tolist())
     df_convert = df.loc[:, columns[0:11]].astype(float)
     df['Event'] = df['Event'].replace('', np.nan)
     df_convert['Event'] = df['Event'].astype(float)
+    df_convert['Trial'] = df['Trial'].astype(float)
 
     return df_convert
 
@@ -75,55 +103,54 @@ def get_file_list(file_src):
     return file_lists
 
 
-def data_process(df):
+def data_process(df_convert):
     """
-    转为原点; 更改Event中trigger; 更改空值.
+    转为原点; 更改Event中trigger; 更改空值; 
+    转换为连续时间
 
-    :param df:转换后的dataframe
+    :param df_convert:转换后的dataframe
     """
-    df['Event'] = df['Event'].fillna(method='ffill')
-    df['Event'] = df['Event'].fillna('Event')
-
-    df = df.drop(df[df.Event == 'Event'].index.tolist())
-    df = df.drop(df[(df.Event == 1) | (df.Event == 0)].index.tolist())
-    df = df.drop(df[(df.Event == 33330) | (df.Event == 33331)
-        | (df.Event == 33332)].index.tolist())
-
-    df.loc[:, ['GazePointXLeft', 'GazePointXRight', 'GazePointX']] = df.loc[:,
-              ['GazePointXLeft', 'GazePointXRight', 'GazePointX']] + 960
-
-    df.loc[:, ['GazePointYLeft', 'GazePointYRight', 'GazePointY']] = df.loc[:,
-              ['GazePointYLeft', 'GazePointYRight', 'GazePointY']] + 540
-
-    df = df.fillna(-1)
-
-    return df
-
-
-def add_time(df):
-    """
-    将TimeStamp列时间改为顺序递增.
     
-    :param df:待处理数据框
-    """
-    t = df['Event'].diff()  # 对trigger列差分
-    trigger_df = t[(t != 0) & (t != 1) & (t.notnull())]
-    trigger_pos = trigger_df.index.tolist()
+    # 获取trial
+    trail_lists = df_convert['Trial'].unique()
     
-    tp = 0  # 计数
-    while tp <= len(trigger_pos):
-        if tp < len(trigger_pos) - 1:
-            df['TimeStamp'].iloc[trigger_pos[tp]:trigger_pos[tp+1]] = df['TimeStamp'].iloc[trigger_pos[tp]:
-                trigger_pos[tp+1]] + df['TimeStamp'].iloc[trigger_pos[tp]-1]
-        tp += 1
-        
-    df['TimeStamp'].iloc[trigger_pos[-1]:len(df['TimeStamp'])+1] = df['TimeStamp'].iloc[trigger_pos[-1]:
-        len(df['TimeStamp'])+1] + df['TimeStamp'].iloc[trigger_pos[-1]-1]
-        
-    return df
+    # 刚跟不同trial块填充试次    
+    for i in trail_lists:
+        df_convert['Event'].loc[df_convert['Trial'] == i] \
+        = df_convert['Event'].loc[df_convert['Trial'] == i].fillna(method='ffill')
+    
+    # 删除不需要的行    
+    df_convert['Event'] = df_convert['Event'].fillna('Event')
+    df_convert = df_convert.drop(df_convert[df_convert.Event == 'Event'].index.tolist())
+    df_convert = df_convert.drop(df_convert[(df_convert.Event == 1) | 
+            (df_convert.Event == 0) | (df_convert.TimeStamp < 0)].index.tolist())
+    df_convert = df_convert.drop(df_convert[(df_convert.Event == 33330) | (df_convert.Event == 33331)
+            | (df_convert.Event == 33332) | (df_convert.Event == 33333)].index.tolist())
+    
+    # 转为以左上角为0点    
+    df_convert.loc[:, ['GazePointXLeft', 'GazePointXRight', 'GazePointX']] = df_convert.loc[:,
+                  ['GazePointXLeft', 'GazePointXRight', 'GazePointX']] + 960
+    df_convert.loc[:, ['GazePointYLeft', 'GazePointYRight', 'GazePointY']] = df_convert.loc[:,
+                  ['GazePointYLeft', 'GazePointYRight', 'GazePointY']] + 540
 
+    # 填充空值
+    df_convert.fillna(-1, inplace=True)    
+    
+    # 重置index
+    df_convert.reset_index(inplace=True, drop=True)
+    
+    # 获取新的trial(删除了填充试次)
+    new_trial_lists = df_convert['Trial'].unique()
+    # 根据试次累加时间
+    for i in new_trial_lists[1:]:
+        last_trial_index = df_convert['TimeStamp'].loc[df_convert['Trial'] == i].index[0]-1
+        last_trial_endtime = df_convert['TimeStamp'].iloc[last_trial_index]
+        df_convert['TimeStamp'].loc[df_convert['Trial'] == i] \
+        = df_convert['TimeStamp'].loc[df_convert['Trial'] == i] + last_trial_endtime
+    
+    return df_convert
 
-
+    
 def main():
     file_lists = get_file_list(file_src)
     try:
@@ -131,14 +158,11 @@ def main():
             file_name = i.split('.')[0] + '_convert.xlsx'
             df_convert = convert_to_pd(i)
             df_out = data_process(df_convert)
-            df_out = add_time(df_out.reset_index(drop=True))
             df_out.to_excel(output_src + os.sep + file_name, index=False)
             logging.debug(i.split('.')[0] + ' is converted!')
     except:
         logging.debug(i.split('.')[0] + ' has some problems!')
-    
-    return df_out
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
