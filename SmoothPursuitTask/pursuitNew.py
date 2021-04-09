@@ -8,7 +8,7 @@ from string import ascii_letters, digits
 import time
 import pylink
 from EyeLinkCoreGraphicsPsychoPy import EyeLinkCoreGraphicsPsychoPy
-from  pylink import *
+from pylink import *
 
 # logging.console.setLevel(logging.CRITICAL)
 
@@ -17,7 +17,7 @@ from  pylink import *
 dummy_mode = True
 
 # full_screen or not
-full_screen = True
+full_screen = False
 
 # the speed of half movement
 half_speed = 2.5
@@ -27,6 +27,13 @@ long_speed = 2.5
 
 # the duration of a movement
 trial_duration = 10
+
+# Horizontal or vertical movement border
+hv_border = 250
+
+# Tilt movement border
+t_border = 180
+
 
 # parameters for Sinusoidal movement patter
 # [amp_x, amp_y, phase_x, phase_y, freq_x, freq_y]
@@ -51,8 +58,8 @@ mov_pars = [
     # [350, 350, 0, pi * 3 / 2, 0, 1 / 8],
     # [350, 350, pi * 3 / 2, 0, 1 / 8, 1 / 8],
     # [350, 350, pi / 2, 0, 1 / 8, 1 / 8]
-    [0, 250, 0, pi/2, 0, 1/4],  # long, vertical, start from top
-    [250, 0, pi/2, 0, 1/4, 0],  # long, horizontal, start from right
+    # [0, 250, 0, pi / 2, 0, 1 / 4],  # long, vertical, start from top
+    # [250, 0, pi / 2, 0, 1 / 4, 0],  # long, horizontal, start from right
 ]
 
 # a list containing half movement parameters
@@ -63,22 +70,22 @@ mov_pars = [
 # end_x: the movement ends x position
 # end_y: the movement ends y position
 trial_half = [
-        ['Vertical_HTC', 0, 250, 0, 0],  # half, top to center
-        ['Vertical_HBC', 0, -250, 0, 0],  # half, bottom to center
-        ['Vertical_HCT', 0, 0, 0, 250],  # half, center to top
-        ['Vertical_HCB', 0, 0, 0, -250],  # half, center to bottom
-        ['Horizontal_HRC', 250, 0, 0, 0],  # half, right to center
-        ['Horizontal_HLC', -250, 0, 0, 0],  # half, left to center
-        ['Horizontal_HCR', 0, 0, 250, 0],  # half, center to right
-        ['Horizontal_HCL', 0, 0, -250, 0],  # half, center to left
-        ['Tilt_HTRC', 177.5, 177.5, 0, 0],  # half, top-right to center
-        ['Tilt_HTLC', -177.5, 177.5, 0, 0], # half, top-left to center
-        ['Tilt_HBLC', -177.5, -177.5, 0, 0],  # half, bottom-left to center
-        ['Tilt_BRC', 177.5, -177.5, 0, 0],  # half, bottom-right to center
-        ['Tilt_CTR', 0, 0, 177.5, 177.5],  # half, center to top-right
-        ['Tilt_CTL', 0, 0, -177.5, 177.5],  # half, center to top-left
-        ['Tilt_CBL', 0, 0, -177.5, -177.5],  # half, center to bottom-left
-        ['Tilt_CBR', 0, 0, 177.5, -177.5],  # half, center to bottom-right
+    ['Vertical_HTC', 0, 250, 0, 0],  # half, top to center
+    ['Vertical_HBC', 0, -250, 0, 0],  # half, bottom to center
+    ['Vertical_HCT', 0, 0, 0, 250],  # half, center to top
+    ['Vertical_HCB', 0, 0, 0, -250],  # half, center to bottom
+    ['Horizontal_HRC', 250, 0, 0, 0],  # half, right to center
+    ['Horizontal_HLC', -250, 0, 0, 0],  # half, left to center
+    ['Horizontal_HCR', 0, 0, 250, 0],  # half, center to right
+    ['Horizontal_HCL', 0, 0, -250, 0],  # half, center to left
+    ['Tilt_HTRC', 177.5, 177.5, 0, 0],  # half, top-right to center
+    ['Tilt_HTLC', -177.5, 177.5, 0, 0],  # half, top-left to center
+    ['Tilt_HBLC', -177.5, -177.5, 0, 0],  # half, bottom-left to center
+    ['Tilt_BRC', 177.5, -177.5, 0, 0],  # half, bottom-right to center
+    ['Tilt_CTR', 0, 0, 177.5, 177.5],  # half, center to top-right
+    ['Tilt_CTL', 0, 0, -177.5, 177.5],  # half, center to top-left
+    ['Tilt_CBL', 0, 0, -177.5, -177.5],  # half, center to bottom-left
+    ['Tilt_CBR', 0, 0, 177.5, -177.5],  # half, center to bottom-right
 ]
 
 # a list containing long movement parameters
@@ -89,14 +96,14 @@ trial_half = [
 # end_x: the movement ends x position
 # end_y: the movement ends y position
 trial_long = [
-        ['Vertical_LTB', 0, 250, 0, -250],  # long, top to bottom
-        ['Vertical_LBT', 0, -250, 0, 250],  # long, bottom to top
-        ['Horizontal_LRL', 250, 0, -250, 0],  # long, right to left
-        ['Horizontal_LLR', -250, 0, 250, 0],  # long, left to right
-        ['Tilt_LTRBL', 177.5, 177.5, -177.5, -177.5],  # half, top-right to bottom-left
-        ['Tilt_LBLTR', -177.5, -177.5, 177.5, 177.5], # half, bottom-left to top-right
-        ['Tilt_LTLBR', -177.5, 177.5, 177.5, -177.5],  # half, top-left to bottom-right
-        ['Tilt_BRTL', 177.5, -177.5, -177.5, 177.5],  # half, bottom-right to top-left
+    ['Vertical_LTB', 0, 250, 0, -250],  # long, top to bottom
+    ['Vertical_LBT', 0, -250, 0, 250],  # long, bottom to top
+    # ['Horizontal_LRL', 250, 0, -250, 0],  # long, right to left
+    # ['Horizontal_LLR', -250, 0, 250, 0],  # long, left to right
+    # ['Tilt_LTRBL', 177.5, 177.5, -177.5, -177.5],  # half, top-right to bottom-left
+    # ['Tilt_LBLTR', -177.5, -177.5, 177.5, 177.5],  # half, bottom-left to top-right
+    # ['Tilt_LTLBR', -177.5, 177.5, 177.5, -177.5],  # half, top-left to bottom-right
+    # ['Tilt_BRTL', 177.5, -177.5, -177.5, 177.5],  # half, bottom-right to top-left
 ]
 
 # Store the parameters for Sinusoidal movement patterns in a list
@@ -111,8 +118,8 @@ trial_long = [
 #
 # In the equation, frequency is cycles per second
 trial_lissajous = [
-    ['Lissajous_slow', 250, 250, pi/2, 0, 15/100, 2/10],  # Lissajous Curve slow
-    ['Lissajous_fast', 250, 250, pi/2, 0, 3/10, 4/10],  # Lissajous Curve fast
+    ['Lissajous_slow', 250, 250, pi / 2, 0, 15 / 100, 2 / 10],  # Lissajous Curve slow
+    ['Lissajous_fast', 250, 250, pi / 2, 0, 3 / 10, 4 / 10],  # Lissajous Curve fast
 ]
 
 # Set up EDF data file name and local data folder
@@ -251,7 +258,7 @@ el_tracker.sendCommand("link_sample_data = %s" % link_sample_flags)
 # if eyelink_ver > 2:
 #     el_tracker.sendCommand("sample_rate 1000")
 # Choose a calibration type, H3, HV3, HV5, HV13 (HV = horizontal/vertical),
-el_tracker.sendCommand("calibration_type = HV9")
+el_tracker.sendCommand("calibration_type = HV5")
 # Set a gamepad button to accept calibration/drift check target
 # You need a supported gamepad/button box that is connected to the Host PC
 el_tracker.sendCommand("button_function 5 'accept_target_fixation'")
@@ -261,7 +268,7 @@ el_tracker.sendCommand("button_function 5 'accept_target_fixation'")
 scnWidth, scnHeight = (1280, 1024)
 
 # create a monitor object
-myMon = monitors.Monitor(name='expMon', width=37.5, distance=60,)
+myMon = monitors.Monitor(name='expMon', width=37.5, distance=60, )
 myMon.setSizePix((scnWidth, scnHeight))
 
 # open a window
@@ -319,12 +326,16 @@ genv.setCalibrationSounds('', '', '')
 # Request Pylink to use the PsychoPy window we opened above for calibration
 pylink.openGraphicsEx(genv)
 
+
 # define a few helper functions for trial handling
 
 
 def clear_screen(win):
-    '''clear up the PsychoPy window'''
-
+    """
+    clear up the PsychoPy window
+    :param win:
+    :return:
+    """
     win.fillColor = genv.getBackgroundColor()
     win.flip()
 
@@ -334,7 +345,7 @@ def show_msg(win, text, wait_for_keypress=True, any_key_to_terminate=True):
 
     msg = visual.TextStim(win, text,
                           color=genv.getForegroundColor(),
-                          wrapWidth=scnWidth/2)
+                          wrapWidth=scnWidth / 2)
     clear_screen(win)
     msg.draw()
     win.flip()
@@ -463,10 +474,10 @@ def half_long(trial_dur, move_pars, trial_index):
     # draw a reference grid on the Host PC screen
     # For details, See section 25.7 'Drawing Commands' in the
     # EyeLink Programmers Guide manual
-    line_hor = (scnWidth/2.0 - start_x, scnHeight/2.0,
-                scnWidth/2.0 + start_x, scnHeight/2.0)
-    line_ver = (scnWidth/2.0, scnHeight/2.0 - start_y,
-                scnWidth/2.0, scnHeight/2.0 + start_y)
+    line_hor = (scnWidth / 2.0 - start_x, scnHeight / 2.0,
+                scnWidth / 2.0 + start_x, scnHeight / 2.0)
+    line_ver = (scnWidth / 2.0, scnHeight / 2.0 - start_y,
+                scnWidth / 2.0, scnHeight / 2.0 + start_y)
     el_tracker.sendCommand('clear_screen 0')  # clear the host Display
     el_tracker.sendCommand('draw_line %d %d %d %d 15' % line_hor)
     el_tracker.sendCommand('draw_line %d %d %d %d 15' % line_ver)
@@ -499,6 +510,60 @@ def half_long(trial_dur, move_pars, trial_index):
     ia_radius = 60  # radius of the elliptical IA
     frame_num = 0  # keep track of the frames displayed
 
+    if not dummy_mode:
+        # fixation trigger
+        fixation = visual.TextStim(win=win, text='+', height=30)
+        fixation.draw()
+        win.flip()
+
+        eye_used = el_tracker.eyeAvailable()
+        if eye_used == 2:
+            eye_used = 0
+
+        start_time_list = []
+        end_time_list = []
+
+        while True:
+            # process eye events
+            ltype = el_tracker.getNextData()
+
+            # print('slist: ' + str(start_time_list))
+            # print('elist: ' + str(end_time_list))
+
+            if ltype is None:
+                pass
+            if ltype == FIXUPDATE:
+                # send a message to mark the arrival time of a fixation update event
+                el_tracker.sendMessage('fixUpdate')
+                # we fetch fixation update event then update the gaze cursor on the Host
+                ldata = el_tracker.getFloatData()
+                if ldata.getEye() == eye_used:
+                    gaze_pos = ldata.getAverageGaze()
+                    fixation.pos = [gaze_pos[0] - scnWidth / 2, scnHeight / 2 - gaze_pos[1]]
+            if (-50 <= fixation.pos[0] <= 50) and (-50 <= fixation.pos[1] <= 50):
+                if ltype == STARTFIX:
+                    # send a message to mark the arrival time of a fixation start event
+                    start_time = core.getTime()
+                    print('start_time: ' + str(start_time))
+                    start_time_list.append(start_time)
+                    print('slist: ' + str(start_time_list))
+                    el_tracker.sendMessage("fixStart")
+                if ltype == ENDFIX:
+                    # send a message to mark the arrival time of a fixation end event
+                    end_time = core.getTime()
+                    print('end_time: ' + str(end_time))
+                    end_time_list.append(end_time)
+                    print('elist: ' + str(end_time_list))
+                    el_tracker.sendMessage("fixEnd")
+            else:
+                start_time_list = []
+                end_time_list = []
+
+            if len(start_time_list) > 0 and len(end_time_list) > 0:
+                if end_time_list[-1] - start_time_list[0] >= 0.5:
+                    print('duration: ' + str(end_time_list[-1] - start_time_list[0]))
+                    break
+
     target.pos = (start_x, start_y)
     target.draw()
     win.flip()
@@ -507,6 +572,7 @@ def half_long(trial_dur, move_pars, trial_index):
     tar_x, tar_y = start_x, start_y
     pursuitClock.reset()
     # flip_time = core.getTime()
+    time_elapsed = 0
 
     while True:
         # abort the current trial if the tracker is no longer recording
@@ -533,12 +599,14 @@ def half_long(trial_dur, move_pars, trial_index):
                 terminate_task()
                 return pylink.ABORT_EXPT
 
-        target.pos = (tar_x, tar_y)
-        target.draw()
-        win.flip()
+        # target.pos = (tar_x, tar_y)
+        # target.draw()
+        # win.flip()
         frame_num += 1
+        flip_time = pursuitClock.getTime()
+        # print(flip_time)
 
-        time_elapsed = pursuitClock.getTime()
+        # time_elapsed = pursuitClock.getTime()
 
         if frame_num == 1:
             # send a message to mark movement onset
@@ -555,16 +623,16 @@ def half_long(trial_dur, move_pars, trial_index):
             # save the Interest Area info following movement onset
             ia_pars = (-1 * round((pre_frame_time - movement_start) * 1000),
                        -1 * round((time_elapsed - movement_start) * 1000) + 1,
-                       int(scnWidth/2.0 + pre_x - ia_radius),
-                       int(scnHeight/2.0 - pre_y - ia_radius),
-                       int(scnWidth/2.0 + pre_x + ia_radius),
-                       int(scnHeight/2.0 - pre_y + ia_radius))
+                       int(scnWidth / 2.0 + pre_x - ia_radius),
+                       int(scnHeight / 2.0 - pre_y - ia_radius),
+                       int(scnWidth / 2.0 + pre_x + ia_radius),
+                       int(scnHeight / 2.0 - pre_y + ia_radius))
 
             ia_msg = '%d %d ELLIPSE 1 %d %d %d %d TARGET\n' % ia_pars
             ias_file.write(ia_msg)
 
             # log the target position after each screen refresh
-            tar_pos = (tar_x + int(scnWidth/2), int(scnHeight/2) - tar_y)
+            tar_pos = (tar_x + int(scnWidth / 2), int(scnHeight / 2) - tar_y)
             tar_pos_msg = '!V TARGET_POS target %d, %d 1 0' % tar_pos
             el_tracker.sendMessage(tar_pos_msg)
 
@@ -575,127 +643,135 @@ def half_long(trial_dur, move_pars, trial_index):
             el_tracker.sendMessage(tar_msg)
 
         # keep track of target position and frame timing
-        pre_frame_time = time_elapsed
+        pre_frame_time = flip_time
         pre_x = tar_x
         pre_y = tar_y
 
+        time_elapsed = flip_time - movement_start
 
         if movement.startswith('Vertical'):
-                if (tar_x, tar_y) != (end_x, end_y):  # 如果起点不在终点位置
+            if (tar_x, tar_y) != (end_x, end_y):  # 如果起点不在终点位置
+                # tar_x = 0
+                if y_length <= 0:  # 小球 上方 - 中间运动，如终点是0，起点是250
+                    tar_y = tar_y - half_speed
+                else:
+                    tar_y = tar_y + half_speed  # 小球 中间 - 上方运动
+
+            else:  # 如果小球到达终点位置
+                while True:
                     # tar_x = 0
-                    if y_length <= 0:  # 小球 上方 - 中间运动，如终点是0，起点是250
-                        tar_y = tar_y - half_speed
+                    if y_length <= 0:  # 如果开始是上方-中间运动，则到达终点后，需要中间-上方运动
+                        tar_y = tar_y + half_speed
                     else:
-                        tar_y = tar_y + half_speed # 小球 中间 - 上方运动
-                else:  # 如果小球到达终点位置
-                    while True:
-                        # tar_x = 0
-                        if y_length <= 0:  # 如果开始是上方-中间运动，则到达终点后，需要中间-上方运动
-                            tar_y = tar_y + half_speed
-                        else:
-                            tar_y = tar_y - half_speed
-                        if (tar_x, tar_y) == (start_x, start_y):  # 运动到起点后，跳出，进入下一次循环
-                            break
-                        print(tar_x, tar_y)
-                        target.pos = (tar_x, tar_y)
-                        target.draw()
-                        win.flip()
+                        tar_y = tar_y - half_speed
+                    if (tar_x, tar_y) == (start_x, start_y):  # 运动到起点后，跳出，进入下一次循环
+                        break
+                    target.pos = (tar_x, tar_y)
+                    target.draw()
+                    win.flip()
+                    # print(tar_x, tar_y)
+
         elif movement.startswith('Horizontal'):
-                if (tar_x, tar_y) != (end_x, end_y):
+            if (tar_x, tar_y) != (end_x, end_y):
+                # tar_x = 0
+                if x_length <= 0:
+                    tar_x = tar_x - half_speed
+                else:
+                    tar_x = tar_x + half_speed
+
+            else:
+                while True:
                     # tar_x = 0
                     if x_length <= 0:
-                        tar_x = tar_x - half_speed
-                    else:
                         tar_x = tar_x + half_speed
+                    else:
+                        tar_x = tar_x - half_speed
+                    if (tar_x, tar_y) == (start_x, start_y):
+                        break
+                    # print(tar_x, tar_y)
+                    target.pos = (tar_x, tar_y)
+                    target.draw()
+                    win.flip()
+        elif movement.startswith('Tilt'):
+            # x_length < 0 and y_length < 0
+            # 包含两种情况
+            # 1: 右上到中心
+            # 2: 中心到左下
+            if (x_length < 0) and (y_length < 0):
+                if (tar_x, tar_y) != (end_x, end_y):
+                    tar_x -= half_speed
+                    tar_y -= half_speed
+
                 else:
                     while True:
-                        # tar_x = 0
-                        if x_length <= 0:
-                            tar_x = tar_x + half_speed
-                        else:
-                            tar_x = tar_x - half_speed
+                        tar_x += half_speed
+                        tar_y += half_speed
                         if (tar_x, tar_y) == (start_x, start_y):
                             break
-                        print(tar_x, tar_y)
                         target.pos = (tar_x, tar_y)
                         target.draw()
                         win.flip()
-        elif movement.startswith('Tilt'):
-                # x_length < 0 and y_length < 0
-                # 包含两种情况
-                # 1: 右上到中心
-                # 2: 中心到左下
-                if (x_length < 0) and (y_length < 0):
-                    if (tar_x, tar_y) != (end_x, end_y):
-                        tar_x -= half_speed
-                        tar_y -= half_speed
-                    else:
-                        while True:
-                            tar_x += half_speed
-                            tar_y += half_speed
-                            if (tar_x, tar_y) == (start_x, start_y):
-                                break
-                            target.pos = (tar_x, tar_y)
-                            target.draw()
-                            win.flip()
-                # x_length > 0 and y_length < 0
-                # 包含两种情况
-                # 1: 左上到中心
-                # 2: 中心到右下
-                elif (x_length > 0) and (y_length < 0):
-                    if (tar_x, tar_y) != (end_x, end_y):
-                        tar_x += half_speed
-                        tar_y -= half_speed
-                    else:
-                        while True:
-                            tar_x -= half_speed
-                            tar_y += half_speed
-                            if (tar_x, tar_y) == (start_x, start_y):
-                                break
-                            target.pos = (tar_x, tar_y)
-                            target.draw()
-                            win.flip()
-                # x_length > 0 and y_length > 0
-                # 包含两种情况
-                # 1: 左下到中心
-                # 2: 中心到右上
-                elif (x_length > 0) and (y_length > 0):
-                    if (tar_x, tar_y) != (end_x, end_y):
-                        tar_x += half_speed
-                        tar_y += half_speed
-                    else:
-                        while True:
-                            tar_x -= half_speed
-                            tar_y -= half_speed
-                            if (tar_x, tar_y) == (start_x, start_y):
-                                break
-                            target.pos = (tar_x, tar_y)
-                            target.draw()
-                            win.flip()
-                # x_length < 0 and y_length > 0
-                # 包含两种情况
-                # 1: 右下到中心
-                # 2: 中心到左上
-                elif (x_length < 0) and (y_length > 0):
-                    if (tar_x, tar_y) != (end_x, end_y):
-                        tar_x -= half_speed
-                        tar_y += half_speed
-                    else:
-                        while True:
-                            tar_x += half_speed
-                            tar_y -= half_speed
-                            if (tar_x, tar_y) == (start_x, start_y):
-                                break
-                            target.pos = (tar_x, tar_y)
-                            target.draw()
-                            win.flip()
+            # x_length > 0 and y_length < 0
+            # 包含两种情况
+            # 1: 左上到中心
+            # 2: 中心到右下
+            elif (x_length > 0) and (y_length < 0):
+                if (tar_x, tar_y) != (end_x, end_y):
+                    tar_x += half_speed
+                    tar_y -= half_speed
 
-        # target.pos = (tar_x, tar_y)
-        # target.draw()
-        # win.flip()
+                else:
+                    while True:
+                        tar_x -= half_speed
+                        tar_y += half_speed
+                        if (tar_x, tar_y) == (start_x, start_y):
+                            break
+                        target.pos = (tar_x, tar_y)
+                        target.draw()
+                        win.flip()
+            # x_length > 0 and y_length > 0
+            # 包含两种情况
+            # 1: 左下到中心
+            # 2: 中心到右上
+            elif (x_length > 0) and (y_length > 0):
+                if (tar_x, tar_y) != (end_x, end_y):
+                    tar_x += half_speed
+                    tar_y += half_speed
+
+                else:
+                    while True:
+                        tar_x -= half_speed
+                        tar_y -= half_speed
+                        if (tar_x, tar_y) == (start_x, start_y):
+                            break
+                        target.pos = (tar_x, tar_y)
+                        target.draw()
+                        win.flip()
+            # x_length < 0 and y_length > 0
+            # 包含两种情况
+            # 1: 右下到中心
+            # 2: 中心到左上
+            elif (x_length < 0) and (y_length > 0):
+                if (tar_x, tar_y) != (end_x, end_y):
+                    tar_x -= half_speed
+                    tar_y += half_speed
+                else:
+                    while True:
+                        tar_x += half_speed
+                        tar_y -= half_speed
+                        if (tar_x, tar_y) == (start_x, start_y):
+                            break
+                        target.pos = (tar_x, tar_y)
+                        target.draw()
+                        win.flip()
+
+        target.pos = (tar_x, tar_y)
+        target.draw()
+        win.flip()
 
         if time_elapsed >= trial_dur:
             el_tracker.sendMessage('TARGET_OFFSET')
+            print(time_elapsed)
             break
 
     # clear the screen
@@ -728,42 +804,228 @@ def half_long(trial_dur, move_pars, trial_index):
     el_tracker.sendMessage('TRIAL_RESULT %d' % pylink.TRIAL_OK)
 
 
-def lissajous_func(trial_dur, movement_pars):
+def lissajous_func(trial_dur, movement_pars, trial_index):
     """
     a function to run Lissajous movement trial.
     :param trial_dur: the duration of the pursuit movement
     :param movement_pars: [amp_x, amp_y, phase_x, phase_y, freq_x, freq_y]
+    :param trial_index: record the order of trial presentation in the task
     :return:
     """
 
     # parse the movement patter parameters
     movement, amp_x, amp_y, phase_x, phase_y, freq_x, freq_y = movement_pars
 
-    # movement stats here
-    # win.flip()
-    pursuitClock.reset()
+    # get a reference to the currently active EyeLink connection
+    el_tracker = pylink.getEYELINK()
 
-    # traj = []
+    # put the tracker in the offline mode first
+    el_tracker.setOfflineMode()
 
-    while True:
-        time_elapsed = pursuitClock.getTime()
-        if time_elapsed >= trial_dur:
-            win.getMovieFrame()
-            win.saveMovieFrames(str(freq_x) + str(freq_y) + '.jpg')
-            break
-        else:
-            tar_x = amp_x * sin(2 * pi * freq_x * time_elapsed + phase_x)
-            tar_y = amp_y * sin(2 * pi * freq_y * time_elapsed + phase_y)
-            target.pos = (tar_x, tar_y)
-            # traj.append([tar_x, tar_y])
-            # tar_traj.vertices = traj
-            target.draw()
-            # tar_traj.draw()
-            win.flip()
+    # send a "TRIALID" message to mark the start of a trial, see Data
+    # Viewer User Manual, "Protocol for EyeLink Data to Viewer Integration"
+    el_tracker.sendMessage('TRIALID %d' % trial_index)
 
-    win.color = [0, 0, 0]
+    # record_status_message : show some info on the Host PC
+    # here we show how many trial has been tested
+    status_msg = 'TRIAL number %d, %s' % (trial_index, movement)
+    el_tracker.sendCommand("record_status_message '%s'" % status_msg)
+
+    # draw a reference grid on the Host PC screen
+    # For details, See section 25.7 'Drawing Commands' in the
+    # EyeLink Programmers Guide manual
+    line_hor = (scnWidth/2.0 - amp_x, scnHeight/2.0,
+                scnWidth/2.0 + amp_x, scnHeight/2.0)
+    line_ver = (scnWidth/2.0, scnHeight/2.0 - amp_y,
+                scnWidth/2.0, scnHeight/2.0 + amp_x)
+    el_tracker.sendCommand('clear_screen 0')  # clear the host Display
+    el_tracker.sendCommand('draw_line %d %d %d %d 15' % line_hor)
+    el_tracker.sendCommand('draw_line %d %d %d %d 15' % line_ver)
+
+    # drift check
+    # we recommend drift-check at the beginning of each trial
+    # the doDriftCorrect() function requires target position in integers
+    # the last two arguments:
+    # draw_target (1-default, 0-draw the target then call doDriftCorrect)
+    # allow_setup (1-press ESCAPE to recalibrate, 0-not allowed)
+    #
+    # Skip drift-check if running the script in Dummy Mode
+
+    dc_x = amp_x*sin(phase_x) + scnWidth/2.0
+    dc_y = scnHeight/2.0 - amp_y*sin(phase_y)
+
+    while not dummy_mode:
+        # terminate the task if no longer connected to the tracker or
+        # user pressed Ctrl-C to terminate the task
+        if (not el_tracker.isConnected()) or el_tracker.breakPressed():
+            terminate_task()
+            return pylink.ABORT_EXPT
+
+        # draw a custom drift-correction target; here the "draw_target"
+        # parameter is set to 0, i.e., user draw the the target instead
+        target.pos = (amp_x * sin(phase_x), amp_y * sin(phase_y))
+        target.draw()
+        win.flip()
+        # drift-check and re-do camera setup if ESCAPE is pressed
+        try:
+            error = el_tracker.doDriftCorrect(int(dc_x), int(dc_y), 0, 1)
+            # break following a success drift-check
+            if error is not pylink.ESC_KEY:
+                break
+        except:
+            pass
+
+    # put tracker in idle/offline mode before recording
+    el_tracker.setOfflineMode()
+
+    # Start recording
+    # arguments: sample_to_file, events_to_file, sample_over_link,
+    # event_over_link (1-yes, 0-no)
+    try:
+        el_tracker.startRecording(1, 1, 1, 1)
+    except RuntimeError as error:
+        print("ERROR:", error)
+        abort_trial()
+        return pylink.TRIAL_ERROR
+
+    # Allocate some time for the tracker to cache some samples
+    pylink.pumpDelay(100)
+
+    # Send a message to clear the Data Viewer screen, get it ready for
+    # drawing the pictures during visualization
+    bgcolor_RGB = (116, 116, 116)
+    el_tracker.sendMessage('!V CLEAR %d %d %d' % bgcolor_RGB)
+
+    # open a INTEREAT AREA SET file to make a dynamic IA for the target
+    ias = 'IA_%d.ias' % trial_index
+    ias_file = open(os.path.join(aoi_folder, ias), 'w')
+
+    # initial target position
+    time_elapsed = 0
+    tar_x = amp_x*sin(2 * pi * freq_x * time_elapsed + phase_x)
+    tar_y = amp_y*sin(2 * pi * freq_y * time_elapsed + phase_y)
+
+    ia_radius = 60  # radius of the elliptical IA
+    frame_num = 0  # keep track of the frames displayed
+
+    target.pos = (tar_x, tar_y)
+    target.draw()
     win.flip()
     core.wait(2)
+
+    while True:
+        # abort the current trial if the tracker is no longer recording
+        error = el_tracker.isRecording()
+        if error is not pylink.TRIAL_OK:
+            el_tracker.sendMessage('tracker_disconnected')
+            abort_trial()
+            return error
+
+        # check keyboard events
+        for keycode, modifier in event.getKeys(modifiers=True):
+            # Abort a trial if "ESCAPE" is pressed
+            if keycode == 'escape':
+                el_tracker.sendMessage('trial_skipped_by_user')
+                # clear the screen
+                clear_screen(win)
+                # abort trial
+                abort_trial()
+                return pylink.SKIP_TRIAL
+
+            # Terminate the task if Ctrl-c
+            if keycode == 'c' and (modifier['ctrl'] is True):
+                el_tracker.sendMessage('terminated_by_user')
+                terminate_task()
+                return pylink.ABORT_EXPT
+
+        # draw the target
+        target.pos = (tar_x, tar_y)
+        target.draw()
+        win.flip()
+        frame_num += 1
+        flip_time = core.getTime()
+
+        if frame_num == 1:
+            # send a message to mark movement onset
+            el_tracker.sendMessage('TARGET_ONSET')
+
+            # record a message to let Data Viewer know where to find
+            # the dynamic IA file for the current trial.
+            ias_path = os.path.join('aoi', ias)
+            el_tracker.sendMessage('!V IAREA FILE %s' % ias_path)
+
+            # pursuit start time
+            movement_start = flip_time
+        else:
+            # save the Interest Area info following movement onset
+            ia_pars = (-1 * round((pre_frame_time - movement_start) * 1000),
+                       -1 * round((flip_time - movement_start) * 1000) + 1,
+                       int(scnWidth/2.0 + pre_x - ia_radius),
+                       int(scnHeight/2.0 - pre_y - ia_radius),
+                       int(scnWidth/2.0 + pre_x + ia_radius),
+                       int(scnHeight/2.0 - pre_y + ia_radius))
+
+            ia_msg = '%d %d ELLIPSE 1 %d %d %d %d TARGET\n' % ia_pars
+            ias_file.write(ia_msg)
+
+            # log the target position after each screen refresh
+            tar_pos = (tar_x + int(scnWidth/2), int(scnHeight/2) - tar_y)
+            tar_pos_msg = '!V TARGET_POS target %d, %d 1 0' % tar_pos
+            el_tracker.sendMessage(tar_pos_msg)
+
+            # OPTIONAL - send over another message to request Data Viewer
+            # to draw the pursuit target when visualizing the data
+            el_tracker.sendMessage('!V CLEAR 128 128 128')
+            tar_msg = '!V FIXPOINT 255 0 0 255 0 0 %d %d 50 50' % tar_pos
+            el_tracker.sendMessage(tar_msg)
+
+        # keep track of target position and frame timing
+        pre_frame_time = flip_time
+        pre_x = tar_x
+        pre_y = tar_y
+
+        # update target position and draw the target
+        time_elapsed = flip_time - movement_start
+        tar_x = amp_x*sin(2 * pi * freq_x * time_elapsed + phase_x)
+        tar_y = amp_y*sin(2 * pi * freq_y * time_elapsed + phase_y)
+
+        # check for time out
+        if time_elapsed >= trial_duration:
+            # send over a message to log movement offset
+            el_tracker.sendMessage('TARGET_OFFSET')
+            print(time_elapsed)
+            break
+
+    # clear the screen
+    clear_screen(win)
+    el_tracker.sendMessage('blank_screen')
+    # send a message to clear the Data Viewer screen as well
+    el_tracker.sendMessage('!V CLEAR 128 128 128')
+
+    # close the IAS file that contain the dynamic IA definition
+    ias_file.close()
+
+    # stop recording; add 100 msec to catch final events before stopping
+    pylink.pumpDelay(100)
+    el_tracker.stopRecording()
+
+    # record trial variables to the EDF data file, for details, see Data
+    # Viewer User Manual, "Protocol for EyeLink Data to Viewer Integration"
+    # movement, dur, amp_x, amp_y, phase_x, phase_y, freq_x, freq_y
+    el_tracker.sendMessage('!V TRIAL_VAR movement %s' % movement)
+    el_tracker.sendMessage('!V TRIAL_VAR max_duration %d' % int(trial_dur*1000))
+    el_tracker.sendMessage('!V TRIAL_VAR amp_x %.02f' % amp_x)
+    pylink.msecDelay(4)  # take a break of 4 millisecond
+    el_tracker.sendMessage('!V TRIAL_VAR amp_y %.02f' % amp_y)
+    el_tracker.sendMessage('!V TRIAL_VAR phase_x %.02f' % (phase_x/pi*180))
+    el_tracker.sendMessage('!V TRIAL_VAR phase_y %.02f' % (phase_y/pi*180))
+    pylink.msecDelay(4)  # take a break of 4 millisecond
+    el_tracker.sendMessage('!V TRIAL_VAR freq_x %.02f' % freq_x)
+    el_tracker.sendMessage('!V TRIAL_VAR freq_y %.02f' % freq_y)
+
+    # send a 'TRIAL_RESULT' message to mark the end of trial, see Data
+    # Viewer User Manual, "Protocol for EyeLink Data to Viewer Integration"
+    el_tracker.sendMessage('TRIAL_RESULT %d' % pylink.TRIAL_OK)
 
 
 def run_half(trial_dur, prac_or_formal):
@@ -800,13 +1062,13 @@ def run_long(trial_dur, prac_or_formal):
         trials = trial_long[:]
         random.shuffle(trials)
         for trial in trials[:2]:
-            half_long(trial_dur, trial)
+            half_long(trial_dur, trial, trial_index)
             trial_index += 1
     elif prac_or_formal == 'formal':
         trials = trial_half[:] * 2
         random.shuffle(trials)
         for trial in trials:
-            half_long(trial_dur, trial)
+            half_long(trial_dur, trial, trial_index)
             trial_index += 1
 
 
@@ -817,36 +1079,38 @@ def run_lissajous(trial_dur, prac_or_formal):
     :param prac_or_formal: to run practice trials or formal trials.
     :return:
     """
+    trial_index = 1
     if prac_or_formal == 'prac':
         trials = trial_lissajous[:]
         random.shuffle(trials)
         for trial in trials[:2]:
-            lissajous_func(trial_dur, trial)
+            lissajous_func(trial_dur, trial, trial_index)
+            trial_index += 1
     elif prac_or_formal == 'formal':
         trials = trial_lissajous[:] * 2
         random.shuffle(trials)
         for trial in trials:
-            lissajous_func(trial_dur, trial)
+            lissajous_func(trial_dur, trial, trial_index)
+            trial_index += 1
 
 
 # Show the task instructions
 task_msg = 'In the task, please follow the dot with your gaze\n' + \
-    'You may press the SPACEBAR to end a trial\n' + \
-    'or press Ctrl-C to if you need to quit the task early\n'
+           'You may press the SPACEBAR to end a trial\n' + \
+           'or press Ctrl-C to if you need to quit the task early\n'
 if dummy_mode:
     task_msg = task_msg + '\nNow, Press ENTER to start the task'
 else:
     task_msg = task_msg + '\nNow, Press ENTER to calibrate tracker'
-show_msg(win, task_msg, wait_for_keypress=False)
+show_msg(win, task_msg, wait_for_keypress=True)
 
 # skip this step if running the script in Dummy Mode
 if not dummy_mode:
     try:
-         el_tracker.doTrackerSetup()
+        el_tracker.doTrackerSetup()
     except RuntimeError as err:
         print("ERROR: ", err)
         el_tracker.exitCalibration()
-
 
 # show some information for selecting when starts
 half_prac = visual.TextStim(win=win, text=u'半程练习', pos=(-150, 50))
@@ -859,7 +1123,6 @@ lissajous_test = visual.TextStim(win=win, text=u'利萨如正式', pos=(150, -10
 
 # calibration_text = visual.TextStim(win=win, text=u'校准眼动', pos=(0, 200), color='black', bold=True)
 quit_text = visual.TextStim(win=win, text=u'退出实验', pos=(0, -250), color='black', bold=True)
-
 
 half_prac.draw()
 long_prac.draw()
@@ -909,11 +1172,12 @@ def test_start():
         elif select_mouse.isPressedIn(lissajous_test):
             show_instruction()
             select_mouse.setVisible(False)
-            run_long(trial_duration, prac_or_formal='formal')
+            run_lissajous(trial_duration, prac_or_formal='formal')
             break
         elif select_mouse.isPressedIn(quit_text):
             terminate_task()
             break
+
 
 # STARTFIX	=	7	#Start of fixation (with time only)
 # ENDFIX	=	8	#End of fixation (with summary data)
@@ -940,52 +1204,65 @@ def fixation_trigger():
     if eye_used == 2:
         eye_used = 0
 
+    start_time_list = []
+    end_time_list = []
+
     while True:
         # process eye events
         ltype = el_tracker.getNextData()
 
+        # print('slist: ' + str(start_time_list))
+        # print('elist: ' + str(end_time_list))
+
         if ltype is None:
             pass
-        elif ltype == FIXUPDATE:
+        if ltype == FIXUPDATE:
             # send a message to mark the arrival time of a fixation update event
             el_tracker.sendMessage('fixUpdate')
             # we fetch fixation update event then update the gaze cursor on the Host
             ldata = el_tracker.getFloatData()
             if ldata.getEye() == eye_used:
                 gaze_pos = ldata.getAverageGaze()
-                el_tracker.drawCross(gaze_pos[0], gaze_pos[1], 15)
-        elif ltype == STARTFIX:
-            # send a message to mark the arrival time of a fixation start event
-            getEYELINK().sendMessage("fixStart")
-        elif ltype == ENDFIX:
-            # send a message to mark the arrival time of a fixation end event
-            getEYELINK().sendMessage("fixEnd")
-        if STARTFIX - ENDFIX >= 50:
+                fixation.pos = [gaze_pos[0] - scnWidth / 2, scnHeight / 2 - gaze_pos[1]]
+        if (-50 <= fixation.pos[0] <= 50) and (-50 <= fixation.pos[1] <= 50):
+            if ltype == STARTFIX:
+                # send a message to mark the arrival time of a fixation start event
+                start_time = core.getTime()
+                print('start_time: ' + str(start_time))
+                start_time_list.append(start_time)
+                print('slist: ' + str(start_time_list))
+                el_tracker.sendMessage("fixStart")
+            if ltype == ENDFIX:
+                # send a message to mark the arrival time of a fixation end event
+                end_time = core.getTime()
+                print('end_time: ' + str(end_time))
+                end_time_list.append(end_time)
+                print('elist: ' + str(end_time_list))
+                el_tracker.sendMessage("fixEnd")
+        else:
+            start_time_list = []
+            end_time_list = []
 
-            break
-
+        if len(start_time_list) > 0 and len(end_time_list) > 0:
+            if end_time_list[-1] - start_time_list[0] >= 0.5:
+                print('duration: ' + str(end_time_list[-1] - start_time_list[0]))
+                break
 
     # Step 6.7 stop recording
     el_tracker().stopRecording()
 
     # Step 6.8: send messages to register trial variables
     # Send over messages to record variables useful for analysis
-    el_tracker().sendMessage("!V TRIAL_VAR trial" )
+    el_tracker().sendMessage("!V TRIAL_VAR trial")
 
     # Step 6.9: send TRIAL_RESULT to mark the end of a trial
     # send over a "TRIAL_RESULT" message for Data Viewer to segment the 'trials'
     el_tracker().sendMessage("TRIAL_RESULT 0")
 
 
-
-
-
-
-
-# test_start()
-fixation_trigger()
+test_start()
+# fixation_trigger()
 
 terminate_task()
 # win.close()
 # core.quit()
-
