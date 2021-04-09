@@ -14,7 +14,7 @@ from pylink import *
 
 
 # dummy_mode
-dummy_mode = True
+dummy_mode = False
 
 # full_screen or not
 full_screen = False
@@ -851,29 +851,29 @@ def lissajous_func(trial_dur, movement_pars, trial_index):
     #
     # Skip drift-check if running the script in Dummy Mode
 
-    dc_x = amp_x*sin(phase_x) + scnWidth/2.0
-    dc_y = scnHeight/2.0 - amp_y*sin(phase_y)
-
-    while not dummy_mode:
-        # terminate the task if no longer connected to the tracker or
-        # user pressed Ctrl-C to terminate the task
-        if (not el_tracker.isConnected()) or el_tracker.breakPressed():
-            terminate_task()
-            return pylink.ABORT_EXPT
-
-        # draw a custom drift-correction target; here the "draw_target"
-        # parameter is set to 0, i.e., user draw the the target instead
-        target.pos = (amp_x * sin(phase_x), amp_y * sin(phase_y))
-        target.draw()
-        win.flip()
-        # drift-check and re-do camera setup if ESCAPE is pressed
-        try:
-            error = el_tracker.doDriftCorrect(int(dc_x), int(dc_y), 0, 1)
-            # break following a success drift-check
-            if error is not pylink.ESC_KEY:
-                break
-        except:
-            pass
+    # dc_x = amp_x*sin(phase_x) + scnWidth/2.0
+    # dc_y = scnHeight/2.0 - amp_y*sin(phase_y)
+    #
+    # while not dummy_mode:
+    #     # terminate the task if no longer connected to the tracker or
+    #     # user pressed Ctrl-C to terminate the task
+    #     if (not el_tracker.isConnected()) or el_tracker.breakPressed():
+    #         terminate_task()
+    #         return pylink.ABORT_EXPT
+    #
+    #     # draw a custom drift-correction target; here the "draw_target"
+    #     # parameter is set to 0, i.e., user draw the the target instead
+    #     target.pos = (amp_x * sin(phase_x), amp_y * sin(phase_y))
+    #     target.draw()
+    #     win.flip()
+    #     # drift-check and re-do camera setup if ESCAPE is pressed
+    #     try:
+    #         error = el_tracker.doDriftCorrect(int(dc_x), int(dc_y), 0, 1)
+    #         # break following a success drift-check
+    #         if error is not pylink.ESC_KEY:
+    #             break
+    #     except:
+    #         pass
 
     # put tracker in idle/offline mode before recording
     el_tracker.setOfflineMode()
@@ -912,6 +912,8 @@ def lissajous_func(trial_dur, movement_pars, trial_index):
     target.draw()
     win.flip()
     core.wait(2)
+
+    print('OK')
 
     while True:
         # abort the current trial if the tracker is no longer recording
@@ -1219,7 +1221,6 @@ def fixation_trigger():
         if ltype == FIXUPDATE:
             # send a message to mark the arrival time of a fixation update event
             el_tracker.sendMessage('fixUpdate')
-            # we fetch fixation update event then update the gaze cursor on the Host
             ldata = el_tracker.getFloatData()
             if ldata.getEye() == eye_used:
                 gaze_pos = ldata.getAverageGaze()
