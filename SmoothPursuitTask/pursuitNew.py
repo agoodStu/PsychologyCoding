@@ -34,34 +34,6 @@ hv_border = 250
 # Tilt movement border
 t_border = 180
 
-
-# parameters for Sinusoidal movement patter
-# [amp_x, amp_y, phase_x, phase_y, freq_x, freq_y]
-# amp_*决定正弦波的振幅，amp_x为300的话，那么该正弦波则从-300px到300px运动（中心点为0）
-# amp_y则是上下振幅
-# phase_x则是决定正弦的起点位置，sin(pi*3/2) = -1，则从左侧开始，终点为右侧
-# sin(pi/2) = 1，则有右侧开始，终点为左侧
-# 如果为0，则从屏幕中心
-# freq_*为一秒内正弦波有多少个周期
-mov_pars = [
-    # [500, 100, pi*3/2, pi*3/2, 4/10, 2],  # start from left
-    # [500, 100, pi*3/2, pi*3/2, 4/10, 2],  # start from left
-    # [500, 250, pi/2, 0, 15/100, 2/10],  # Lissmtajous Curve slow
-    # [500, 250, pi/2, 0, 3/10, 4/10]  # Lissajous Curve fast
-    # [500, 200, pi*3/2, pi*3/2, 1/5, 1],  # start from right
-    # [500, 100, pi*3/2, 0, 1.0, 2]
-    # [500, 100, pi*3/2, 0, 5.0, 1.0]
-    # [350, 350, pi*3/2, 0, 1/8, 1/8]
-    # [350, 350, pi * 3 / 2, 0, 1 / 8, 0],
-    # [350, 350, pi / 2, 0, 1 / 8, 0],
-    # [350, 350, 0, pi / 2, 0, 1 / 8],
-    # [350, 350, 0, pi * 3 / 2, 0, 1 / 8],
-    # [350, 350, pi * 3 / 2, 0, 1 / 8, 1 / 8],
-    # [350, 350, pi / 2, 0, 1 / 8, 1 / 8]
-    # [0, 250, 0, pi / 2, 0, 1 / 4],  # long, vertical, start from top
-    # [250, 0, pi / 2, 0, 1 / 4, 0],  # long, horizontal, start from right
-]
-
 # a list containing half movement parameters
 # [movement, start_x, start_y, end_x, end_y]
 # movement: movement type
@@ -70,22 +42,22 @@ mov_pars = [
 # end_x: the movement ends x position
 # end_y: the movement ends y position
 trial_half = [
-    ['Vertical_HTC', 0, 250, 0, 0],  # half, top to center
-    ['Vertical_HBC', 0, -250, 0, 0],  # half, bottom to center
-    ['Vertical_HCT', 0, 0, 0, 250],  # half, center to top
-    ['Vertical_HCB', 0, 0, 0, -250],  # half, center to bottom
-    ['Horizontal_HRC', 250, 0, 0, 0],  # half, right to center
-    ['Horizontal_HLC', -250, 0, 0, 0],  # half, left to center
-    ['Horizontal_HCR', 0, 0, 250, 0],  # half, center to right
-    ['Horizontal_HCL', 0, 0, -250, 0],  # half, center to left
-    ['Tilt_HTRC', 177.5, 177.5, 0, 0],  # half, top-right to center
-    ['Tilt_HTLC', -177.5, 177.5, 0, 0],  # half, top-left to center
-    ['Tilt_HBLC', -177.5, -177.5, 0, 0],  # half, bottom-left to center
-    ['Tilt_BRC', 177.5, -177.5, 0, 0],  # half, bottom-right to center
-    ['Tilt_CTR', 0, 0, 177.5, 177.5],  # half, center to top-right
-    ['Tilt_CTL', 0, 0, -177.5, 177.5],  # half, center to top-left
-    ['Tilt_CBL', 0, 0, -177.5, -177.5],  # half, center to bottom-left
-    ['Tilt_CBR', 0, 0, 177.5, -177.5],  # half, center to bottom-right
+    ['Vertical_HTC', 0, hv_border, 0, 0],  # half, top to center
+    ['Vertical_HBC', 0, -hv_border, 0, 0],  # half, bottom to center
+    ['Vertical_HCT', 0, 0, 0, hv_border],  # half, center to top
+    ['Vertical_HCB', 0, 0, 0, -hv_border],  # half, center to bottom
+    ['Horizontal_HRC', hv_border, 0, 0, 0],  # half, right to center
+    ['Horizontal_HLC', -hv_border, 0, 0, 0],  # half, left to center
+    ['Horizontal_HCR', 0, 0, hv_border, 0],  # half, center to right
+    ['Horizontal_HCL', 0, 0, -hv_border, 0],  # half, center to left
+    ['Tilt_HTRC', t_border, t_border, 0, 0],  # half, top-right to center
+    ['Tilt_HTLC', -t_border, t_border, 0, 0],  # half, top-left to center
+    ['Tilt_HBLC', -t_border, -t_border, 0, 0],  # half, bottom-left to center
+    ['Tilt_BRC', t_border, -t_border, 0, 0],  # half, bottom-right to center
+    ['Tilt_CTR', 0, 0, t_border, t_border],  # half, center to top-right
+    ['Tilt_CTL', 0, 0, -t_border, t_border],  # half, center to top-left
+    ['Tilt_CBL', 0, 0, -t_border, -t_border],  # half, center to bottom-left
+    ['Tilt_CBR', 0, 0, t_border, -t_border],  # half, center to bottom-right
 ]
 
 # a list containing long movement parameters
@@ -96,27 +68,24 @@ trial_half = [
 # end_x: the movement ends x position
 # end_y: the movement ends y position
 trial_long = [
-    ['Vertical_LTB', 0, 250, 0, -250],  # long, top to bottom
-    ['Vertical_LBT', 0, -250, 0, 250],  # long, bottom to top
-    # ['Horizontal_LRL', 250, 0, -250, 0],  # long, right to left
-    # ['Horizontal_LLR', -250, 0, 250, 0],  # long, left to right
-    # ['Tilt_LTRBL', 177.5, 177.5, -177.5, -177.5],  # half, top-right to bottom-left
-    # ['Tilt_LBLTR', -177.5, -177.5, 177.5, 177.5],  # half, bottom-left to top-right
-    # ['Tilt_LTLBR', -177.5, 177.5, 177.5, -177.5],  # half, top-left to bottom-right
-    # ['Tilt_BRTL', 177.5, -177.5, -177.5, 177.5],  # half, bottom-right to top-left
+    ['Vertical_LTB', 0, hv_border, 0, -hv_border],  # long, top to bottom
+    ['Vertical_LBT', 0, -hv_border, 0, hv_border],  # long, bottom to top
+    ['Horizontal_LRL', hv_border, 0, -hv_border, 0],  # long, right to left
+    ['Horizontal_LLR', -hv_border, 0, hv_border, 0],  # long, left to right
+    ['Tilt_LTRBL', t_border, t_border, -t_border, -t_border],  # half, top-right to bottom-left
+    ['Tilt_LBLTR', -t_border, -t_border, t_border, t_border],  # half, bottom-left to top-right
+    ['Tilt_LTLBR', -t_border, t_border, t_border, -t_border],  # half, top-left to bottom-right
+    ['Tilt_BRTL', t_border, -t_border, -t_border, t_border],  # half, bottom-right to top-left
 ]
 
-# Store the parameters for Sinusoidal movement patterns in a list
-# [movement_type, max_duration, amp_x, amp_y, phase_x, phase_y, freq_x, freq_y]
-#
-# y(t) = amplitude * sin(2 * pi * frequency * t + phase)
-#
-# a combination of these parameters will give you a movement in horizontal
-# or vertical direction only, a circular movement, or a movement that follow
-# a complex Lissajous curve. For a circular or elliptical movements, the phase
-# in x and y directions should differ by pi/2 (direction of the difference matters)
-#
-# In the equation, frequency is cycles per second
+# parameters for Sinusoidal movement patter
+# [amp_x, amp_y, phase_x, phase_y, freq_x, freq_y]
+# amp_*决定正弦波的振幅，amp_x为300的话，那么该正弦波则从-300px到300px运动（中心点为0）
+# amp_y则是上下振幅
+# phase_x则是决定正弦的起点位置，sin(pi*3/2) = -1，则从左侧开始，终点为右侧
+# sin(pi/2) = 1，则有右侧开始，终点为左侧
+# 如果为0，则从屏幕中心
+# freq_*为一秒内正弦波有多少个周期
 trial_lissajous = [
     ['Lissajous_slow', 250, 250, pi / 2, 0, 15 / 100, 2 / 10],  # Lissajous Curve slow
     ['Lissajous_fast', 250, 250, pi / 2, 0, 3 / 10, 4 / 10],  # Lissajous Curve fast
@@ -510,11 +479,12 @@ def half_long(trial_dur, move_pars, trial_index):
     ia_radius = 60  # radius of the elliptical IA
     frame_num = 0  # keep track of the frames displayed
 
+    # used a fixation trigger in not dummy mode
     if not dummy_mode:
-        # fixation trigger
         fixation = visual.TextStim(win=win, text='+', height=30)
         fixation.draw()
         win.flip()
+        el_tracker.sendMessage("FIXATION_TRIGGER")
 
         eye_used = el_tracker.eyeAvailable()
         if eye_used == 2:
@@ -544,16 +514,16 @@ def half_long(trial_dur, move_pars, trial_index):
                 if ltype == STARTFIX:
                     # send a message to mark the arrival time of a fixation start event
                     start_time = core.getTime()
-                    print('start_time: ' + str(start_time))
+                    # print('start_time: ' + str(start_time))
                     start_time_list.append(start_time)
-                    print('slist: ' + str(start_time_list))
+                    # print('slist: ' + str(start_time_list))
                     el_tracker.sendMessage("fixStart")
                 if ltype == ENDFIX:
                     # send a message to mark the arrival time of a fixation end event
                     end_time = core.getTime()
-                    print('end_time: ' + str(end_time))
+                    # print('end_time: ' + str(end_time))
                     end_time_list.append(end_time)
-                    print('elist: ' + str(end_time_list))
+                    # print('elist: ' + str(end_time_list))
                     el_tracker.sendMessage("fixEnd")
             else:
                 start_time_list = []
@@ -561,12 +531,13 @@ def half_long(trial_dur, move_pars, trial_index):
 
             if len(start_time_list) > 0 and len(end_time_list) > 0:
                 if end_time_list[-1] - start_time_list[0] >= 0.5:
-                    print('duration: ' + str(end_time_list[-1] - start_time_list[0]))
+                    # print('duration: ' + str(end_time_list[-1] - start_time_list[0]))
                     break
 
     target.pos = (start_x, start_y)
     target.draw()
     win.flip()
+    el_tracker.sendMessage('TARGET_WAIT')
     core.wait(2)
 
     tar_x, tar_y = start_x, start_y
@@ -777,8 +748,8 @@ def half_long(trial_dur, move_pars, trial_index):
     # clear the screen
     win.color = (0, 0, 0)
     win.flip()
-    core.wait(1)
     el_tracker.sendMessage('black_screen')
+    core.wait(1)
     el_tracker.sendMessage('!V CLEAR 128 128 128')
 
     # close the IAS file that contain the dynamic IA definition
@@ -842,39 +813,6 @@ def lissajous_func(trial_dur, movement_pars, trial_index):
     el_tracker.sendCommand('draw_line %d %d %d %d 15' % line_hor)
     el_tracker.sendCommand('draw_line %d %d %d %d 15' % line_ver)
 
-    # drift check
-    # we recommend drift-check at the beginning of each trial
-    # the doDriftCorrect() function requires target position in integers
-    # the last two arguments:
-    # draw_target (1-default, 0-draw the target then call doDriftCorrect)
-    # allow_setup (1-press ESCAPE to recalibrate, 0-not allowed)
-    #
-    # Skip drift-check if running the script in Dummy Mode
-
-    # dc_x = amp_x*sin(phase_x) + scnWidth/2.0
-    # dc_y = scnHeight/2.0 - amp_y*sin(phase_y)
-    #
-    # while not dummy_mode:
-    #     # terminate the task if no longer connected to the tracker or
-    #     # user pressed Ctrl-C to terminate the task
-    #     if (not el_tracker.isConnected()) or el_tracker.breakPressed():
-    #         terminate_task()
-    #         return pylink.ABORT_EXPT
-    #
-    #     # draw a custom drift-correction target; here the "draw_target"
-    #     # parameter is set to 0, i.e., user draw the the target instead
-    #     target.pos = (amp_x * sin(phase_x), amp_y * sin(phase_y))
-    #     target.draw()
-    #     win.flip()
-    #     # drift-check and re-do camera setup if ESCAPE is pressed
-    #     try:
-    #         error = el_tracker.doDriftCorrect(int(dc_x), int(dc_y), 0, 1)
-    #         # break following a success drift-check
-    #         if error is not pylink.ESC_KEY:
-    #             break
-    #     except:
-    #         pass
-
     # put tracker in idle/offline mode before recording
     el_tracker.setOfflineMode()
 
@@ -911,9 +849,63 @@ def lissajous_func(trial_dur, movement_pars, trial_index):
     target.pos = (tar_x, tar_y)
     target.draw()
     win.flip()
+    el_tracker.sendMessage('TARGET_WAIT')
     core.wait(2)
 
-    print('OK')
+    # used a fixation trigger in not dummy mode
+    if not dummy_mode:
+        fixation = visual.TextStim(win=win, text='+', height=30)
+        fixation.draw()
+        win.flip()
+        el_tracker.sendMessage("FIXATION_TRIGGER")
+
+        eye_used = el_tracker.eyeAvailable()
+        if eye_used == 2:
+            eye_used = 0
+
+        start_time_list = []
+        end_time_list = []
+
+        while True:
+            # process eye events
+            ltype = el_tracker.getNextData()
+
+            # print('slist: ' + str(start_time_list))
+            # print('elist: ' + str(end_time_list))
+
+            if ltype is None:
+                pass
+            if ltype == FIXUPDATE:
+                # send a message to mark the arrival time of a fixation update event
+                el_tracker.sendMessage('fixUpdate')
+                # we fetch fixation update event then update the gaze cursor on the Host
+                ldata = el_tracker.getFloatData()
+                if ldata.getEye() == eye_used:
+                    gaze_pos = ldata.getAverageGaze()
+                    fixation.pos = [gaze_pos[0] - scnWidth / 2, scnHeight / 2 - gaze_pos[1]]
+            if (-50 <= fixation.pos[0] <= 50) and (-50 <= fixation.pos[1] <= 50):
+                if ltype == STARTFIX:
+                    # send a message to mark the arrival time of a fixation start event
+                    start_time = core.getTime()
+                    print('start_time: ' + str(start_time))
+                    start_time_list.append(start_time)
+                    print('slist: ' + str(start_time_list))
+                    el_tracker.sendMessage("fixStart")
+                if ltype == ENDFIX:
+                    # send a message to mark the arrival time of a fixation end event
+                    end_time = core.getTime()
+                    print('end_time: ' + str(end_time))
+                    end_time_list.append(end_time)
+                    print('elist: ' + str(end_time_list))
+                    el_tracker.sendMessage("fixEnd")
+            else:
+                start_time_list = []
+                end_time_list = []
+
+            if len(start_time_list) > 0 and len(end_time_list) > 0:
+                if end_time_list[-1] - start_time_list[0] >= 0.5:
+                    print('duration: ' + str(end_time_list[-1] - start_time_list[0]))
+                    break
 
     while True:
         # abort the current trial if the tracker is no longer recording
@@ -999,8 +991,11 @@ def lissajous_func(trial_dur, movement_pars, trial_index):
             break
 
     # clear the screen
-    clear_screen(win)
-    el_tracker.sendMessage('blank_screen')
+    # clear_screen(win)
+    win.color = (0, 0, 0)
+    win.flip()
+    el_tracker.sendMessage('black_screen')
+    core.wait(1)
     # send a message to clear the Data Viewer screen as well
     el_tracker.sendMessage('!V CLEAR 128 128 128')
 
@@ -1265,5 +1260,4 @@ test_start()
 # fixation_trigger()
 
 terminate_task()
-# win.close()
-# core.quit()
+
