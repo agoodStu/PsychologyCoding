@@ -17,9 +17,19 @@
 
 跨通道空间线索任务。
 
+### SmoothPursuitTask
 
+平滑追踪任务。包括两种：
+
+- 基于正弦波的平滑追踪（Lissajous curve）
+- 基于八个方向的直线追踪任务
+
+眼动部分使用的EyeLink眼动仪。使用Psychopy和pylink连接。
+
+感谢王志国老师@[zhiguo-eyelab](https://github.com/zhiguo-eyelab)的帮助。
 
 ## Updata Log
 
 - 二〇一九年五月十六日 22:05:52，更新eyemoveData
 - 二〇一九年六月二日 11:00:37，添加crossSpatialCueingTask
+- 2021年4月12日 20:07:01，更新SmoothPursuitTask
