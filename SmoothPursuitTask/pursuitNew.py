@@ -14,19 +14,25 @@ from pylink import *
 
 
 # dummy_mode
-dummy_mode = False
+dummy_mode = True
 
 # full_screen or not
 full_screen = False
 
+# radius of the elliptical IA
+ia_radius = 60
+
 # the speed of half movement
-half_speed = 2.5
+half_speed = 5
 
 # the speed of long movement
-long_speed = 2.5
+long_speed = 5
 
-# the duration of a movement
-trial_duration = 10
+# the duration of lissajous movement
+lissajous_duration = 16
+
+# the duration of half and long movement
+hl_duration = 2
 
 # Horizontal or vertical movement border
 hv_border = 250
@@ -99,6 +105,9 @@ edf_fname = 'TEST'
 
 # Prompt user to specify an EDF data filename
 # before we open a fullscreen window
+# 1-2: 被试编号
+# 3-5： 姓名缩写
+# 7: 任务类型
 dlg_title = 'Enter EDF File Name'
 dlg_prompt = 'Please enter a file name with 8 or fewer characters\n' + \
              '[letters, numbers, and underscore].'
@@ -237,7 +246,10 @@ el_tracker.sendCommand("button_function 5 'accept_target_fixation'")
 scnWidth, scnHeight = (1280, 1024)
 
 # create a monitor object
-myMon = monitors.Monitor(name='expMon', width=37.5, distance=60, )
+# 25 inch monitor
+# width = 50.8 cm
+# height = 98.1 cm
+myMon = monitors.Monitor(name='expMon', width=38.1, distance=60, )
 myMon.setSizePix((scnWidth, scnHeight))
 
 # open a window
@@ -397,7 +409,14 @@ def abort_trial():
 
 
 # prepare the pursuit target, the clock and the movement parameters
-target = visual.GratingStim(win=win, tex=None, mask='circle', size=15)
+# when set screen resolution = (1920, 1080)
+# 1 cm = 37.8 px
+# when the distance between subject and screen is 60 cm
+# 1 visual angle approximately 1.05 cm, that is approximately 40 px
+# when set screen resolution = (1280, 1024)
+# 1 cm = 25.2 px
+# so 1° visual angle approximately 26 px
+target = visual.GratingStim(win=win, tex=None, mask='circle', size=40)
 pursuitClock = core.Clock()
 
 
@@ -476,7 +495,7 @@ def half_long(trial_dur, move_pars, trial_index):
     ias = 'IA_%d.ias' % trial_index
     ias_file = open(os.path.join(aoi_folder, ias), 'w')
 
-    ia_radius = 60  # radius of the elliptical IA
+    # ia_radius = 60  # radius of the elliptical IA
     frame_num = 0  # keep track of the frames displayed
 
     # used a fixation trigger in not dummy mode
@@ -538,7 +557,7 @@ def half_long(trial_dur, move_pars, trial_index):
     target.draw()
     win.flip()
     el_tracker.sendMessage('TARGET_WAIT')
-    core.wait(2)
+    core.wait(1)  # wait 1 secs for moving
 
     tar_x, tar_y = start_x, start_y
     pursuitClock.reset()
@@ -553,29 +572,29 @@ def half_long(trial_dur, move_pars, trial_index):
             abort_trial()
             return error
 
-        # check keyboard events
-        for keycode, modifier in event.getKeys(modifiers=True):
-            # Abort a trial if "ESCAPE" is pressed
-            if keycode == 'escape':
-                el_tracker.sendMessage('trial_skipped_by_user')
-                # clear the screen
-                clear_screen(win)
-                # abort trial
-                abort_trial()
-                return pylink.SKIP_TRIAL
-
-            # Terminate the task if Ctrl-c
-            if keycode == 'c' and (modifier['ctrl'] is True):
-                el_tracker.sendMessage('terminated_by_user')
-                terminate_task()
-                return pylink.ABORT_EXPT
+        # # check keyboard events
+        # for keycode, modifier in event.getKeys(modifiers=True):
+        #     # Abort a trial if "ESCAPE" is pressed
+        #     if keycode == 'escape':
+        #         el_tracker.sendMessage('trial_skipped_by_user')
+        #         # clear the screen
+        #         clear_screen(win)
+        #         # abort trial
+        #         abort_trial()
+        #         return pylink.SKIP_TRIAL
+        #
+        #     # Terminate the task if Ctrl-c
+        #     if keycode == 'c' and (modifier['ctrl'] is True):
+        #         el_tracker.sendMessage('terminated_by_user')
+        #         terminate_task()
+        #         return pylink.ABORT_EXPT
 
         # target.pos = (tar_x, tar_y)
         # target.draw()
         # win.flip()
         frame_num += 1
         flip_time = pursuitClock.getTime()
-        # print(flip_time)
+        print('flip_time_a: ' + str(flip_time))
 
         # time_elapsed = pursuitClock.getTime()
 
@@ -619,6 +638,7 @@ def half_long(trial_dur, move_pars, trial_index):
         pre_y = tar_y
 
         time_elapsed = flip_time - movement_start
+        print('start ' + str(time_elapsed))
 
         if movement.startswith('Vertical'):
             if (tar_x, tar_y) != (end_x, end_y):  # 如果起点不在终点位置
@@ -627,15 +647,16 @@ def half_long(trial_dur, move_pars, trial_index):
                     tar_y = tar_y - half_speed
                 else:
                     tar_y = tar_y + half_speed  # 小球 中间 - 上方运动
-
             else:  # 如果小球到达终点位置
                 while True:
-                    # tar_x = 0
+                    flip_time = pursuitClock.getTime()
+                    time_elapsed = flip_time - movement_start
                     if y_length <= 0:  # 如果开始是上方-中间运动，则到达终点后，需要中间-上方运动
                         tar_y = tar_y + half_speed
                     else:
                         tar_y = tar_y - half_speed
-                    if (tar_x, tar_y) == (start_x, start_y):  # 运动到起点后，跳出，进入下一次循环
+                    if (tar_x, tar_y) == (start_x, start_y) or (time_elapsed >= trial_dur):  # 运动到起点后，跳出，进入下一次循环
+                        print('a ' + str(time_elapsed))
                         break
                     target.pos = (tar_x, tar_y)
                     target.draw()
@@ -649,20 +670,22 @@ def half_long(trial_dur, move_pars, trial_index):
                     tar_x = tar_x - half_speed
                 else:
                     tar_x = tar_x + half_speed
-
             else:
                 while True:
-                    # tar_x = 0
+                    flip_time = pursuitClock.getTime()
+                    time_elapsed = flip_time - movement_start
                     if x_length <= 0:
                         tar_x = tar_x + half_speed
                     else:
                         tar_x = tar_x - half_speed
-                    if (tar_x, tar_y) == (start_x, start_y):
+                    if (tar_x, tar_y) == (start_x, start_y) or (time_elapsed >= trial_dur):
+                        print('a ' + str(time_elapsed))
                         break
                     # print(tar_x, tar_y)
                     target.pos = (tar_x, tar_y)
                     target.draw()
                     win.flip()
+
         elif movement.startswith('Tilt'):
             # x_length < 0 and y_length < 0
             # 包含两种情况
@@ -672,16 +695,19 @@ def half_long(trial_dur, move_pars, trial_index):
                 if (tar_x, tar_y) != (end_x, end_y):
                     tar_x -= half_speed
                     tar_y -= half_speed
-
                 else:
                     while True:
+                        flip_time = pursuitClock.getTime()
+                        time_elapsed = flip_time - movement_start
                         tar_x += half_speed
                         tar_y += half_speed
-                        if (tar_x, tar_y) == (start_x, start_y):
+                        if (tar_x, tar_y) == (start_x, start_y) or (time_elapsed >= trial_dur):
+                            print('a ' + str(time_elapsed))
                             break
                         target.pos = (tar_x, tar_y)
                         target.draw()
                         win.flip()
+
             # x_length > 0 and y_length < 0
             # 包含两种情况
             # 1: 左上到中心
@@ -690,12 +716,14 @@ def half_long(trial_dur, move_pars, trial_index):
                 if (tar_x, tar_y) != (end_x, end_y):
                     tar_x += half_speed
                     tar_y -= half_speed
-
                 else:
                     while True:
+                        flip_time = pursuitClock.getTime()
+                        time_elapsed = flip_time - movement_start
                         tar_x -= half_speed
                         tar_y += half_speed
-                        if (tar_x, tar_y) == (start_x, start_y):
+                        if (tar_x, tar_y) == (start_x, start_y) or (time_elapsed >= trial_dur):
+                            print('a ' + str(time_elapsed))
                             break
                         target.pos = (tar_x, tar_y)
                         target.draw()
@@ -711,9 +739,12 @@ def half_long(trial_dur, move_pars, trial_index):
 
                 else:
                     while True:
+                        flip_time = pursuitClock.getTime()
+                        time_elapsed = flip_time - movement_start
                         tar_x -= half_speed
                         tar_y -= half_speed
-                        if (tar_x, tar_y) == (start_x, start_y):
+                        if (tar_x, tar_y) == (start_x, start_y) or (time_elapsed >= trial_dur):
+                            print('a ' + str(time_elapsed))
                             break
                         target.pos = (tar_x, tar_y)
                         target.draw()
@@ -728,9 +759,12 @@ def half_long(trial_dur, move_pars, trial_index):
                     tar_y += half_speed
                 else:
                     while True:
+                        flip_time = pursuitClock.getTime()
+                        time_elapsed = flip_time - movement_start
                         tar_x += half_speed
                         tar_y -= half_speed
-                        if (tar_x, tar_y) == (start_x, start_y):
+                        if (tar_x, tar_y) == (start_x, start_y) or (time_elapsed >= trial_dur):
+                            print('a ' + str(time_elapsed))
                             break
                         target.pos = (tar_x, tar_y)
                         target.draw()
@@ -739,17 +773,18 @@ def half_long(trial_dur, move_pars, trial_index):
         target.pos = (tar_x, tar_y)
         target.draw()
         win.flip()
+        print('middle ' + str(time_elapsed))
 
         if time_elapsed >= trial_dur:
             el_tracker.sendMessage('TARGET_OFFSET')
-            print(time_elapsed)
+            print('end ' + str(time_elapsed))
             break
 
     # clear the screen
     win.color = (0, 0, 0)
     win.flip()
     el_tracker.sendMessage('black_screen')
-    core.wait(1)
+    core.wait(2)
     el_tracker.sendMessage('!V CLEAR 128 128 128')
 
     # close the IAS file that contain the dynamic IA definition
@@ -850,7 +885,7 @@ def lissajous_func(trial_dur, movement_pars, trial_index):
     target.draw()
     win.flip()
     el_tracker.sendMessage('TARGET_WAIT')
-    core.wait(2)
+    core.wait(1)  # wait 1 secs for moving
 
     # used a fixation trigger in not dummy mode
     if not dummy_mode:
@@ -984,7 +1019,7 @@ def lissajous_func(trial_dur, movement_pars, trial_index):
         tar_y = amp_y*sin(2 * pi * freq_y * time_elapsed + phase_y)
 
         # check for time out
-        if time_elapsed >= trial_duration:
+        if time_elapsed >= trial_dur:
             # send over a message to log movement offset
             el_tracker.sendMessage('TARGET_OFFSET')
             print(time_elapsed)
@@ -995,7 +1030,7 @@ def lissajous_func(trial_dur, movement_pars, trial_index):
     win.color = (0, 0, 0)
     win.flip()
     el_tracker.sendMessage('black_screen')
-    core.wait(1)
+    core.wait(2)
     # send a message to clear the Data Viewer screen as well
     el_tracker.sendMessage('!V CLEAR 128 128 128')
 
@@ -1040,10 +1075,10 @@ def run_half(trial_dur, prac_or_formal):
             half_long(trial_dur, trial, trial_index)
             trial_index += 1
     elif prac_or_formal == 'formal':
-        trials = trial_half[:] * 2
+        trials = trial_half[:] * 10
         random.shuffle(trials)
         for trial in trials:
-            half_long(trial_duration, trial, trial_index)
+            half_long(trial_dur, trial, trial_index)
             trial_index += 1
 
 
@@ -1062,7 +1097,7 @@ def run_long(trial_dur, prac_or_formal):
             half_long(trial_dur, trial, trial_index)
             trial_index += 1
     elif prac_or_formal == 'formal':
-        trials = trial_half[:] * 2
+        trials = trial_long[:] * 10
         random.shuffle(trials)
         for trial in trials:
             half_long(trial_dur, trial, trial_index)
@@ -1084,7 +1119,7 @@ def run_lissajous(trial_dur, prac_or_formal):
             lissajous_func(trial_dur, trial, trial_index)
             trial_index += 1
     elif prac_or_formal == 'formal':
-        trials = trial_lissajous[:] * 2
+        trials = trial_lissajous[:] * 10
         random.shuffle(trials)
         for trial in trials:
             lissajous_func(trial_dur, trial, trial_index)
@@ -1144,32 +1179,32 @@ def test_start():
         if select_mouse.isPressedIn(half_prac):
             show_instruction()
             select_mouse.setVisible(False)
-            run_half(trial_duration, prac_or_formal='prac')
+            run_half(hl_duration, prac_or_formal='prac')
             break
         elif select_mouse.isPressedIn(long_prac):
             show_instruction()
             select_mouse.setVisible(False)
-            run_long(trial_duration, prac_or_formal='prac')
+            run_long(hl_duration, prac_or_formal='prac')
             break
         elif select_mouse.isPressedIn(lissajous_prac):
             show_instruction()
             select_mouse.setVisible(False)
-            run_lissajous(trial_duration, prac_or_formal='prac')
+            run_lissajous(lissajous_duration, prac_or_formal='prac')
             break
         elif select_mouse.isPressedIn(half_test):
             show_instruction()
             select_mouse.setVisible(False)
-            run_half(trial_duration, prac_or_formal='formal')
+            run_half(hl_duration, prac_or_formal='formal')
             break
         elif select_mouse.isPressedIn(long_test):
             show_instruction()
             select_mouse.setVisible(False)
-            run_long(trial_duration, prac_or_formal='formal')
+            run_long(hl_duration, prac_or_formal='formal')
             break
         elif select_mouse.isPressedIn(lissajous_test):
             show_instruction()
             select_mouse.setVisible(False)
-            run_lissajous(trial_duration, prac_or_formal='formal')
+            run_lissajous(lissajous_duration, prac_or_formal='formal')
             break
         elif select_mouse.isPressedIn(quit_text):
             terminate_task()
@@ -1181,6 +1216,7 @@ def test_start():
 # FIXUPDATE	=	9	#Update within fixation, summary data for interval
 
 
+# just for testing
 def fixation_trigger():
     """
     :return:
