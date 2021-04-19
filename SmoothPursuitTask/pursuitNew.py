@@ -20,9 +20,10 @@ dummy_mode = True
 full_screen = False
 
 # radius of the elliptical IA
-ia_radius = 60
+ia_radius = 40
 
-# the speed of half and long movement, approximately 8°/s
+# 500 pixels approximately 13.7°
+# the speed of half and long movement, approximately 8.5°/s
 hl_speed = 5
 
 # the duration of lissajous movement
@@ -35,7 +36,14 @@ hl_duration = 2
 hv_border = 250
 
 # Tilt movement border
-t_border = 180
+# ATTENTION: sin() and cos() 默认使用的是弧度值
+# 圆上任意一点坐标公式
+# cx, cy 为圆心坐标
+# θ是相对水平轴的角度
+# px = cx + r * cos(θ)
+# py = cy + r * sin(θ)
+# 角度45°： px = 177, py = 177
+t_border = 177
 
 # a list containing half movement parameters
 # [movement, start_x, start_y, end_x, end_y]
@@ -45,22 +53,22 @@ t_border = 180
 # end_x: the movement ends x position
 # end_y: the movement ends y position
 trial_half = [
-    ['Vertical_HTC', 0, hv_border, 0, 0],  # half, top to center
-    ['Vertical_HBC', 0, -hv_border, 0, 0],  # half, bottom to center
-    ['Vertical_HCT', 0, 0, 0, hv_border],  # half, center to top
-    ['Vertical_HCB', 0, 0, 0, -hv_border],  # half, center to bottom
-    ['Horizontal_HRC', hv_border, 0, 0, 0],  # half, right to center
-    ['Horizontal_HLC', -hv_border, 0, 0, 0],  # half, left to center
-    ['Horizontal_HCR', 0, 0, hv_border, 0],  # half, center to right
-    ['Horizontal_HCL', 0, 0, -hv_border, 0],  # half, center to left
-    ['Tilt_HTRC', t_border, t_border, 0, 0],  # half, top-right to center
-    ['Tilt_HTLC', -t_border, t_border, 0, 0],  # half, top-left to center
-    ['Tilt_HBLC', -t_border, -t_border, 0, 0],  # half, bottom-left to center
-    ['Tilt_BRC', t_border, -t_border, 0, 0],  # half, bottom-right to center
-    ['Tilt_CTR', 0, 0, t_border, t_border],  # half, center to top-right
-    ['Tilt_CTL', 0, 0, -t_border, t_border],  # half, center to top-left
-    ['Tilt_CBL', 0, 0, -t_border, -t_border],  # half, center to bottom-left
-    ['Tilt_CBR', 0, 0, t_border, -t_border],  # half, center to bottom-right
+    ['Vertical_H_TC', 0, hv_border, 0, 0],  # half, top to center
+    ['Vertical_H_BC', 0, -hv_border, 0, 0],  # half, bottom to center
+    ['Vertical_H_CT', 0, 0, 0, hv_border],  # half, center to top
+    ['Vertical_H_CB', 0, 0, 0, -hv_border],  # half, center to bottom
+    ['Horizontal_H_RC', hv_border, 0, 0, 0],  # half, right to center
+    ['Horizontal_H_LC', -hv_border, 0, 0, 0],  # half, left to center
+    ['Horizontal_H_CR', 0, 0, hv_border, 0],  # half, center to right
+    ['Horizontal_H_CL', 0, 0, -hv_border, 0],  # half, center to left
+    ['Tilt_H_TRC', t_border, t_border, 0, 0],  # half, top-right to center
+    ['Tilt_H_TLC', -t_border, t_border, 0, 0],  # half, top-left to center
+    ['Tilt_H_BLC', -t_border, -t_border, 0, 0],  # half, bottom-left to center
+    ['Tilt_H_BRC', t_border, -t_border, 0, 0],  # half, bottom-right to center
+    ['Tilt_H_CTR', 0, 0, t_border, t_border],  # half, center to top-right
+    ['Tilt_H_CTL', 0, 0, -t_border, t_border],  # half, center to top-left
+    ['Tilt_H_CBL', 0, 0, -t_border, -t_border],  # half, center to bottom-left
+    ['Tilt_H_CBR', 0, 0, t_border, -t_border],  # half, center to bottom-right
 ]
 
 # a list containing long movement parameters
@@ -71,14 +79,14 @@ trial_half = [
 # end_x: the movement ends x position
 # end_y: the movement ends y position
 trial_long = [
-    ['Vertical_LTB', 0, hv_border, 0, -hv_border],  # long, top to bottom
-    ['Vertical_LBT', 0, -hv_border, 0, hv_border],  # long, bottom to top
-    ['Horizontal_LRL', hv_border, 0, -hv_border, 0],  # long, right to left
-    ['Horizontal_LLR', -hv_border, 0, hv_border, 0],  # long, left to right
-    ['Tilt_LTRBL', t_border, t_border, -t_border, -t_border],  # half, top-right to bottom-left
-    ['Tilt_LBLTR', -t_border, -t_border, t_border, t_border],  # half, bottom-left to top-right
-    ['Tilt_LTLBR', -t_border, t_border, t_border, -t_border],  # half, top-left to bottom-right
-    ['Tilt_BRTL', t_border, -t_border, -t_border, t_border],  # half, bottom-right to top-left
+    ['Vertical_L_TB', 0, hv_border, 0, -hv_border],  # long, top to bottom
+    ['Vertical_L_BT', 0, -hv_border, 0, hv_border],  # long, bottom to top
+    ['Horizontal_L_RL', hv_border, 0, -hv_border, 0],  # long, right to left
+    ['Horizontal_L_LR', -hv_border, 0, hv_border, 0],  # long, left to right
+    ['Tilt_L_TRBL', t_border, t_border, -t_border, -t_border],  # half, top-right to bottom-left
+    ['Tilt_L_BLTR', -t_border, -t_border, t_border, t_border],  # half, bottom-left to top-right
+    ['Tilt_L_TLBR', -t_border, t_border, t_border, -t_border],  # half, top-left to bottom-right
+    ['Tilt_L_BRTL', t_border, -t_border, -t_border, t_border],  # half, bottom-right to top-left
 ]
 
 # parameters for Sinusoidal movement patter
@@ -413,7 +421,8 @@ def abort_trial():
 # when set screen resolution = (1280, 1024)
 # 1 cm = 25.2 px
 # so 1° visual angle approximately 26 px
-target = visual.GratingStim(win=win, tex=None, mask='circle', size=36)
+# target = visual.GratingStim(win=win, tex=None, mask='circle', size=36)
+target = visual.ImageStim(win=win, image='./images/target.png')
 pursuitClock = core.Clock()
 
 
@@ -499,13 +508,12 @@ def half_long_new(move_pars, trial_index):
     # bla
 
 
-
     tar_x, tar_y = start_x, start_y
     target.pos = (tar_x, tar_y)
     target.draw()
     win.flip()
     el_tracker.sendMessage('TARGET_WAIT')
-    core.wait(0.2)  # wait 200 ms
+    core.wait(0.1)  # wait 200 ms
 
     pursuitClock.reset()
     time_elapsed = 0
@@ -600,8 +608,8 @@ def half_long_new(move_pars, trial_index):
             # 2. 小球小中心 - 左下
             # 全程：小球从右上 - 左下
             if x_length < 0 and y_length < 0:
-                tar_x -= hl_speed
-                tar_y -= hl_speed
+                tar_x -= hl_speed / 1.4
+                tar_y -= hl_speed / 1.4
                 if tar_x <= end_x or tar_y <= end_y:  # x或y到达终点后，跳出循环
                     el_tracker.sendMessage('TARGET_OFFSET')
                     break
@@ -611,8 +619,8 @@ def half_long_new(move_pars, trial_index):
             # 2. 小球从中心 - 右下
             # 全程：小球从左上 - 右下
             elif x_length > 0 > y_length:
-                tar_x += hl_speed
-                tar_y -= hl_speed
+                tar_x += hl_speed / 1.4
+                tar_y -= hl_speed / 1.4
                 if tar_x >= end_x or tar_y <= end_y:  # x或y到达终点后，跳出循环
                     el_tracker.sendMessage('TARGET_OFFSET')
                     break
@@ -622,8 +630,8 @@ def half_long_new(move_pars, trial_index):
             # 2. 小球从中心 - 右上
             # 全程：小球从左下 - 右上
             elif x_length > 0 and y_length > 0:
-                tar_x += hl_speed
-                tar_y += hl_speed
+                tar_x += hl_speed / 1.4
+                tar_y += hl_speed / 1.4
                 if tar_x >= end_x or tar_y >= end_y:  # x或y到达终点后，跳出循环
                     el_tracker.sendMessage('TARGET_OFFSET')
                     break
@@ -633,8 +641,8 @@ def half_long_new(move_pars, trial_index):
             # 2. 小球从中心 - 左上
             # 全程：小球从右下 - 中心
             elif x_length < 0 < y_length:
-                tar_x -= hl_speed
-                tar_y += hl_speed
+                tar_x -= hl_speed / 1.4
+                tar_y += hl_speed / 1.4
                 if tar_x <= end_x or tar_y >= end_y:  # x或y到达终点后，跳出循环
                     el_tracker.sendMessage('TARGET_OFFSET')
                     break
@@ -1179,7 +1187,7 @@ def lissajous_func(trial_dur, movement_pars, trial_index):
     target.draw()
     win.flip()
     el_tracker.sendMessage('TARGET_WAIT')
-    core.wait(1)  # wait 1 secs for moving
+    core.wait(0.1)  # wait 1 secs for moving
 
     while True:
         # abort the current trial if the tracker is no longer recording
@@ -1271,7 +1279,7 @@ def lissajous_func(trial_dur, movement_pars, trial_index):
     el_tracker.sendMessage('black_screen')
     # send a message to clear the Data Viewer screen as well
     el_tracker.sendMessage('!V CLEAR 128 128 128')
-    core.wait(2)
+    core.wait(0.5)
 
     # close the IAS file that contain the dynamic IA definition
     ias_file.close()
@@ -1308,13 +1316,13 @@ def run_half(prac_or_formal):
     trial_index = 1
     if prac_or_formal == 'prac':
         trials = trial_half[:]
-        random.shuffle(trials)
+        random.Random(12).shuffle(trials)
         for trial in trials[:2]:
             half_long_new(trial, trial_index)
             trial_index += 1
     elif prac_or_formal == 'formal':
         trials = trial_half[:] * 10
-        random.shuffle(trials)
+        random.Random(21).shuffle(trials)
         for trial in trials:
             half_long_new(trial, trial_index)
             trial_index += 1
@@ -1329,13 +1337,13 @@ def run_long(prac_or_formal):
     trial_index = 1
     if prac_or_formal == 'prac':
         trials = trial_long[:]
-        random.shuffle(trials)
+        random.Random(13).shuffle(trials)
         for trial in trials:
             half_long_new(trial, trial_index)
             trial_index += 1
     elif prac_or_formal == 'formal':
         trials = trial_long[:] * 10
-        random.shuffle(trials)
+        random.Random(31).shuffle(trials)
         for trial in trials:
             half_long_new(trial, trial_index)
             trial_index += 1
@@ -1351,13 +1359,13 @@ def run_lissajous(trial_dur, prac_or_formal):
     trial_index = 1
     if prac_or_formal == 'prac':
         trials = trial_lissajous[:]
-        random.shuffle(trials)
+        random.Random(14).shuffle(trials)
         for trial in trials[:2]:
             lissajous_func(trial_dur, trial, trial_index)
             trial_index += 1
     elif prac_or_formal == 'formal':
         trials = trial_lissajous[:] * 10
-        random.shuffle(trials)
+        random.Random(41).shuffle(trials)
         for trial in trials:
             lissajous_func(trial_dur, trial, trial_index)
             trial_index += 1
@@ -1365,8 +1373,7 @@ def run_lissajous(trial_dur, prac_or_formal):
 
 # Show the task instructions
 task_msg = u'你的任务是使用眼睛追踪屏幕上出现的白色小球\n'
-           # 'You may press the SPACEBAR to end a trial\n' + \
-           # 'or press Ctrl-C to if you need to quit the task early\n'
+
 if dummy_mode:
     task_msg = task_msg + u'\n现在，请按回车键开始任务'
 else:
@@ -1454,6 +1461,8 @@ def test_start():
 
 
 # just for testing
+# the fixation trigger duration around 250 - 350 ms will work much better.
+# according to ExperimentBuilder User Manual.pdf
 def fixation_trigger():
     """
     :return:
