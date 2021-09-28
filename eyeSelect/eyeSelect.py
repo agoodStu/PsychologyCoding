@@ -1,5 +1,5 @@
 # FileName: selectSquare.py
-#
+# Author: Jishan Ye
 from psychopy import event, visual, core, monitors, logging
 from psychopy.tools.monitorunittools import posToPix
 import numpy as np
@@ -58,13 +58,14 @@ rv_yellow = [(-400, -180), (400, -180), (400, -540), (-400, -540)]
 
 # small rectangle vertices
 # generate the ten X position
-s_rv_dot = np.random.randint(-420, 420, 10)
+s_rv_dot = np.random.randint(-420, 420, 4)
 
 # side length of small rectangle
 s_rv_len = 30
 
 # speed of small rectangle
-speed_lists = np.random.randint(3, 7, 4)
+# speed_lists = np.random.randint(3, 7, 4)
+speed_lists = np.random.randint(1, 4, 4)
 
 # generate the list that contains small rect vertices
 s_rv_vertices = []
@@ -77,7 +78,7 @@ for i in s_rv_dot:
 random.Random(12345).shuffle(s_rv_vertices)
 s_rv_lists = random.sample(s_rv_vertices, k=4)  # random sample
 t = s_rv_vertices[0]
-# print(s_rv_lists)
+print(s_rv_lists)
 
 # print(s_rv_vertices)
 
@@ -126,20 +127,28 @@ s_rect_yellow = visual.ShapeStim(win, vertices=s_rv_lists[3], fillColor='yellow'
                                  lineColor=None)
 
 # define some lists that contains rect mark
-test_lists = []
+# test_lists = {'first_select': '', 'secdond_select': ''}
+# test_lists = []
+
+# define the select state of square as False
+red_selected = False
+green_selected = False
+blue_selected = False
+yellow_selected = False
+
+# set a timer
+t = core.getTime()
 
 # draw rect
 while not mouse.isPressedIn(rect_red):
 
     mouse_zone.pos = mouse.getPos()
-    # print(mouse_zone.pos)
 
     if rect_red.contains(mouse):
         rect_red.fillColor = 'black'
         rect_red.opacity = 0.6
-        test_lists.append(1)
-        if rect_green.contains(mouse):
-            print('red selected')
+        red_selected = True
+        red_time = core.getTime() - t
     else:
         rect_red.fillColor = 'grey'
         rect_red.opacity = 1
@@ -147,6 +156,8 @@ while not mouse.isPressedIn(rect_red):
     if rect_green.contains(mouse):
         rect_green.fillColor = 'black'
         rect_green.opacity = 0.6
+        green_selected = True
+        green_time = core.getTime() - t
     else:
         rect_green.fillColor = 'grey'
         rect_green.opacity = 1
@@ -154,6 +165,8 @@ while not mouse.isPressedIn(rect_red):
     if rect_blue.contains(mouse):
         rect_blue.fillColor = 'black'
         rect_blue.opacity = 0.6
+        blue_selected = True
+        blue_time = core.getTime() - t
     else:
         rect_blue.fillColor = 'grey'
         rect_blue.opacity = 1
@@ -161,22 +174,86 @@ while not mouse.isPressedIn(rect_red):
     if rect_yellow.contains(mouse):
         rect_yellow.fillColor = 'black'
         rect_yellow.opacity = 0.6
+        yellow_selected = True
+        yellow_time = core.getTime() - t
     else:
         rect_yellow.fillColor = 'grey'
         rect_yellow.opacity = 1
 
+    # if do a right select
+    if red_selected and green_selected:
+        print('red: ' + str(red_time))
+        print('green: ' + str(green_time))
+        if red_time - green_time < 0:
+            s_rect_red.fillColor = 'grey'
+        else:
+            s_rect_green.fillColor = 'grey'
+
+        green_selected = False
+        red_selected = False
+    elif blue_selected and yellow_selected:
+        print('blue: ' + str(blue_time))
+        print('yellow: ' + str(yellow_time))
+        if blue_time - yellow_time < 0:
+            s_rect_blue.fillColor = 'grey'
+        else:
+            s_rect_yellow.fillColor = 'grey'
+
+        yellow_selected = False
+        blue_selected = False
+
+    # if do a WRONG selected
+    if red_selected:
+        if blue_selected:  # red --> blue --> green
+            blue_selected = False
+            red_selected = False
+        if yellow_selected:  # red --> yellow --> green
+            yellow_selected = False
+            red_selected = False
+
+    # if do a WRONG selected
+    if blue_selected:
+        if red_selected:  # blue --> red --> yellow
+            red_selected = False
+            blue_selected = False
+        if green_selected:  # blue --> green --> yellow
+            green_selected = False
+            blue_selected = False
+
+    # if do a WRONG selected
+    if green_selected:
+        if blue_selected:  # green --> blue --> red
+            blue_selected = False
+            green_selected = False
+        if yellow_selected:  # green --> yellow --> red
+            yellow_selected = False
+            green_selected = False
+
+    # if do a WRONG selected
+    if yellow_selected:
+        if red_selected:  # yellow --> red --> blue
+            red_selected = False
+            yellow_selected = False
+        if green_selected:  # yellow --> green --> blue
+            green_selected = False
+            yellow_selected = False
+
+    # draw mouse zone
     mouse_zone.draw()
 
+    # draw rect frame
     rect_red.draw()
     rect_green.draw()
     rect_blue.draw()
     rect_yellow.draw()
 
+    # draw small rect
     s_rect_red.draw()
     s_rect_green.draw()
     s_rect_blue.draw()
     s_rect_yellow.draw()
 
+    # set the speed of small rect
     s_rect_red.pos -= (0, speed_lists[0])
     s_rect_green.pos -= (0, speed_lists[1])
     s_rect_blue.pos -= (0, speed_lists[2])
@@ -186,8 +263,8 @@ while not mouse.isPressedIn(rect_red):
 
     # if s_rect_red.pos[-1] < -1080:
     #     break
+    # define some rules to abort trial
 
-# core.wait(5)
 
 win.close()
 core.quit()
