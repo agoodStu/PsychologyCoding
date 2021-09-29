@@ -3,7 +3,7 @@
 from psychopy import event, visual, core, monitors, logging
 from psychopy.tools.monitorunittools import posToPix
 import numpy as np
-import random
+import random, sys
 
 # 思路
 # step 1：搭建界面
@@ -29,6 +29,25 @@ import random
 # 每次落下的数量随机，在3~5之间
 # 可采取不放回抽样
 
+# step 1.3 试次退出条件
+# - 选中 0，Miss 4，C(4, 0) = 1 种可能
+# - 选中 1，Miss 3，C(4, 1) = 4 种可能
+# - 选中 2，Miss 2，C(4, 2) = 6 种可能
+# - 选中 3，Miss 1，C(4, 3) = 4 种可能
+# - 选中 4，Miss 0，C(4, 4) = 1 种可能
+
+# step 1.4: 行为因变量
+# step 1.4.1: 反应时
+# 定义：如果被试选择正确，则返回被试进入第一个方块的时间-进入第二个方块的时间
+# step 1.4.2: 错误率
+# 定义：被试在选择第一个方块后，没有进入位置相反的方块
+# step 1.4.3: Miss率
+# 定义：被试没有选择的小方块，掉出屏幕
+# step 1.4.4: 任务时间
+# 定义：一个试次中，任务开始到结束的时间
+
+# step 1.5 Dlg信息
+# 被试姓名、年龄、等等
 
 # step 2: 眼动部分
 # step 2.1: 眼动位置指示
@@ -41,6 +60,7 @@ import random
 # step 2.2.2: 计算原理
 #
 
+
 # dummy_mode
 dummy_mode = True
 
@@ -51,14 +71,17 @@ full_screen = False
 scn_width, scn_height = (1920, 1080)
 
 # rect_vertices
-rv_red = [(-960, 180), (-400, 180), (-400, -180), (-960, -180), ]
-rv_green = [(400, 180), (960, 180), (960, -180), (400, -180)]
-rv_blue = [(-400, 540), (400, 540), (400, 180), (-400, 180)]
-rv_yellow = [(-400, -180), (400, -180), (400, -540), (-400, -540)]
+rv_red = [(-960, 360), (-400, 360), (-400, -360), (-960, -360)]
+rv_green = [(400, 360), (960, 360), (960, -360), (400, -360)]
+rv_blue = [(-400, 540), (400, 540), (400, 360), (-400, 360)]
+rv_yellow = [(-400, -360), (400, -360), (400, -540), (-400, -540)]
 
 # small rectangle vertices
 # generate the ten X position
-s_rv_dot = np.random.randint(-420, 420, 4)
+# s_rv_dot = np.random.randint(-420, 420, 4)
+s_rv_dot = []
+for i in range(10):
+    s_rv_dot.append(random.randrange(-420, 420, 35))
 
 # side length of small rectangle
 s_rv_len = 30
@@ -136,6 +159,25 @@ green_selected = False
 blue_selected = False
 yellow_selected = False
 
+# define the select state of small rect as False
+s_red_selected = False
+s_green_selected = False
+s_blue_selected = False
+s_yellow_selected = False
+
+# define the small rect out the screen as False
+s_red_out = False
+s_green_out = False
+s_blue_out = False
+s_yellow_out = False
+
+# open a file to write data
+# file_name = ''
+# head_line = map(str, ['Participant', 'trial', 'Correct', 'Miss', 'RT', 'trailTime'])
+# sub_data = open('test.csv', 'w')
+# sub_data.write(','.join(head_line) + '\n')
+# sub_data.close()
+
 # set a timer
 t = core.getTime()
 
@@ -144,6 +186,7 @@ while not mouse.isPressedIn(rect_red):
 
     mouse_zone.pos = mouse.getPos()
 
+    # if the mouse fall in the big rect
     if rect_red.contains(mouse):
         rect_red.fillColor = 'black'
         rect_red.opacity = 0.6
@@ -182,23 +225,22 @@ while not mouse.isPressedIn(rect_red):
 
     # if do a right select
     if red_selected and green_selected:
-        print('red: ' + str(red_time))
-        print('green: ' + str(green_time))
+        print(abs(red_time - green_time))
         if red_time - green_time < 0:
-            s_rect_red.fillColor = 'grey'
+            s_rect_red.opacity = 0
+            s_red_selected = True
         else:
-            s_rect_green.fillColor = 'grey'
-
+            s_rect_green.opacity = 0
+            s_green_selected = True
         green_selected = False
         red_selected = False
     elif blue_selected and yellow_selected:
-        print('blue: ' + str(blue_time))
-        print('yellow: ' + str(yellow_time))
         if blue_time - yellow_time < 0:
-            s_rect_blue.fillColor = 'grey'
+            s_rect_blue.opacity = 0
+            s_blue_selected = True
         else:
-            s_rect_yellow.fillColor = 'grey'
-
+            s_rect_yellow.opacity = 0
+            s_yellow_selected = True
         yellow_selected = False
         blue_selected = False
 
@@ -261,9 +303,50 @@ while not mouse.isPressedIn(rect_red):
 
     win.flip()
 
-    # if s_rect_red.pos[-1] < -1080:
-    #     break
-    # define some rules to abort trial
+    # print('red pos: ' + str(s_rect_red.pos[1]))
+
+    if s_rect_red.pos[1] < -1080:
+        s_red_out = True
+    if s_rect_green.pos[1] < -1080:
+        s_green_out = True
+    if s_rect_blue.pos[1] < -1080:
+        s_blue_out = True
+    if s_rect_yellow.pos[1] < -1080:
+        s_yellow_out = True
+
+    # define some rules to exit trail
+    if s_red_out and s_green_out and s_blue_out and s_yellow_out:  # 0 selected, miss 4
+        break
+    elif s_red_selected and s_green_selected and s_blue_selected and s_yellow_selected:  # 4 selected, miss 0
+        break
+    elif s_red_selected and s_green_out and s_blue_out and s_yellow_out:  # 1 red selected, miss 3
+        break
+    elif s_green_selected and s_red_out and s_blue_out and s_yellow_out:  # 1 green selected, miss 3
+        break
+    elif s_blue_selected and s_red_out and s_green_out and s_yellow_out:  # 1 blue selected, miss 3
+        break
+    elif s_yellow_selected and s_red_out and s_green_out and s_blue_out:  # 1 yellow selected, miss 3
+        break
+    elif s_red_selected and s_green_selected and s_blue_out and s_yellow_out:  # 2 red, green selected, miss 2
+        break
+    elif s_red_selected and s_blue_selected and s_green_out and s_yellow_out:  # 2 red, blue selected, miss 2
+        break
+    elif s_red_selected and s_yellow_selected and s_green_out and s_blue_out:  # 2 red, yellow selected, miss 2
+        break
+    elif s_green_selected and s_blue_selected and s_red_out and s_yellow_out:  # 2 green, blue selected, miss 2
+        break
+    elif s_green_selected and s_yellow_selected and s_red_out and s_blue_out:  # 2 green, yellow selected, miss 2
+        break
+    elif s_blue_selected and s_yellow_selected and s_red_out and s_green_out:  # 2 blue, yellow selected, miss 2
+        break
+    elif s_red_selected and s_green_selected and s_blue_selected and s_yellow_out:  # 3 r, g, b selected, miss 1
+        break
+    elif s_red_selected and s_green_selected and s_yellow_selected and s_blue_out:  # 3 r, g, y selected, miss 1
+        break
+    elif s_red_selected and s_blue_selected and s_yellow_selected and s_green_out:  # 3 r, b, y selected, miss 1
+        break
+    elif green_selected and blue_selected and s_yellow_selected and s_red_out:  # 3 g, b, y selected, miss 1
+        break
 
 
 win.close()
