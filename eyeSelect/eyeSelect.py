@@ -1,7 +1,6 @@
 # FileName: selectSquare.py
 # Author: Jishan Ye
 from psychopy import event, visual, core, monitors, logging
-from psychopy.tools.monitorunittools import posToPix
 import numpy as np
 import random, sys
 
@@ -18,10 +17,6 @@ import random, sys
 
 # step 1.2: 小方块
 # step 1.2.1: 小方块的生成
-# -----------弃用------------
-# 小方块可以采用图片形式，清晰度更高
-# 注意颜色和大方块颜色的对应，可以先找好Psychopy中对应颜色的RGB值
-# -----------弃用------------
 # 随机生成小方块的坐标点
 # 因为小方块都是屏幕顶部运动，因为位置有一定规律，即X值变化，Y值固定
 # 需要随机生成X值，再根据小方块边长，即可确定小方块四个点的坐标
@@ -41,6 +36,7 @@ import random, sys
 # 定义：如果被试选择正确，则返回被试进入第一个方块的时间-进入第二个方块的时间
 # step 1.4.2: 错误率
 # 定义：被试在选择第一个方块后，没有进入位置相反的方块
+# 怎么样计算？？
 # step 1.4.3: Miss率
 # 定义：被试没有选择的小方块，掉出屏幕
 # step 1.4.4: 任务时间
@@ -76,19 +72,19 @@ rv_green = [(400, 360), (960, 360), (960, -360), (400, -360)]
 rv_blue = [(-400, 540), (400, 540), (400, 360), (-400, 360)]
 rv_yellow = [(-400, -360), (400, -360), (400, -540), (-400, -540)]
 
-# small rectangle vertices
-# generate the ten X position
-# s_rv_dot = np.random.randint(-420, 420, 4)
-s_rv_dot = []
-for i in range(10):
-    s_rv_dot.append(random.randrange(-420, 420, 35))
-
-# side length of small rectangle
-s_rv_len = 30
-
 # speed of small rectangle
 # speed_lists = np.random.randint(3, 7, 4)
 speed_lists = np.random.randint(1, 4, 4)
+
+# 小方块的左上点x坐标
+s_rv_dot = []
+s_rv_dot_begin = -380
+for i in range(20):
+    s_rv_dot.append(s_rv_dot_begin)
+    s_rv_dot_begin += 35
+
+# side length of small rectangle
+s_rv_len = 30
 
 # generate the list that contains small rect vertices
 s_rv_vertices = []
@@ -97,21 +93,6 @@ for i in s_rv_dot:
         [(i, 540), (i + s_rv_len, 540),
          (i + s_rv_len, 540 - s_rv_len), (i, 540 - s_rv_len)]
     )
-
-random.Random(12345).shuffle(s_rv_vertices)
-s_rv_lists = random.sample(s_rv_vertices, k=4)  # random sample
-t = s_rv_vertices[0]
-print(s_rv_lists)
-
-# print(s_rv_vertices)
-
-# x = 0
-#
-#
-# s_rv_red = [(x, 540), (x + s_rv_len, 540),
-#             (s_rv_len, 540 - s_rv_len), (x, 540 - s_rv_len)]
-
-# s_rv_red = [(0, 540), (30, 540), (30, 510), (0, 510)]
 
 # create a Monitor object
 my_mon = monitors.Monitor(name='mon', width=55.3, distance=60, )
@@ -139,215 +120,314 @@ rect_blue = visual.ShapeStim(win, vertices=rv_blue, fillColor='grey', lineWidth=
 rect_yellow = visual.ShapeStim(win, vertices=rv_yellow, fillColor='grey', lineWidth=2,
                                lineColor='yellow')
 
-# set small rect
-s_rect_red = visual.ShapeStim(win, vertices=s_rv_lists[0], fillColor='red',
-                              lineColor=None)
-s_rect_green = visual.ShapeStim(win, vertices=s_rv_lists[1], fillColor='green',
-                                lineColor=None)
-s_rect_blue = visual.ShapeStim(win, vertices=s_rv_lists[2], fillColor='blue',
-                               lineColor=None)
-s_rect_yellow = visual.ShapeStim(win, vertices=s_rv_lists[3], fillColor='yellow',
-                                 lineColor=None)
-
-# define some lists that contains rect mark
-# test_lists = {'first_select': '', 'secdond_select': ''}
-# test_lists = []
-
-# define the select state of square as False
-red_selected = False
-green_selected = False
-blue_selected = False
-yellow_selected = False
-
-# define the select state of small rect as False
-s_red_selected = False
-s_green_selected = False
-s_blue_selected = False
-s_yellow_selected = False
-
-# define the small rect out the screen as False
-s_red_out = False
-s_green_out = False
-s_blue_out = False
-s_yellow_out = False
+# define a TextStim to draw text
+msg = visual.TextStim(win=win, text='', color='white', units='pix')
 
 # open a file to write data
-# file_name = ''
-# head_line = map(str, ['Participant', 'trial', 'Correct', 'Miss', 'RT', 'trailTime'])
-# sub_data = open('test.csv', 'w')
-# sub_data.write(','.join(head_line) + '\n')
-# sub_data.close()
+file_name = ''
+head_line = map(str, ['trial', 'rectangle', 'correct', 'wrong',
+                      'miss', 'RT', 'trailTime'])
+sub_data = open('test.csv', 'w')
+sub_data.write(','.join(head_line) + '\n')
 
-# set a timer
-t = core.getTime()
 
-# draw rect
-while not mouse.isPressedIn(rect_red):
-
-    mouse_zone.pos = mouse.getPos()
-
-    # if the mouse fall in the big rect
-    if rect_red.contains(mouse):
-        rect_red.fillColor = 'black'
-        rect_red.opacity = 0.6
-        red_selected = True
-        red_time = core.getTime() - t
-    else:
-        rect_red.fillColor = 'grey'
-        rect_red.opacity = 1
-
-    if rect_green.contains(mouse):
-        rect_green.fillColor = 'black'
-        rect_green.opacity = 0.6
-        green_selected = True
-        green_time = core.getTime() - t
-    else:
-        rect_green.fillColor = 'grey'
-        rect_green.opacity = 1
-
-    if rect_blue.contains(mouse):
-        rect_blue.fillColor = 'black'
-        rect_blue.opacity = 0.6
-        blue_selected = True
-        blue_time = core.getTime() - t
-    else:
-        rect_blue.fillColor = 'grey'
-        rect_blue.opacity = 1
-
-    if rect_yellow.contains(mouse):
-        rect_yellow.fillColor = 'black'
-        rect_yellow.opacity = 0.6
-        yellow_selected = True
-        yellow_time = core.getTime() - t
-    else:
-        rect_yellow.fillColor = 'grey'
-        rect_yellow.opacity = 1
-
-    # if do a right select
-    if red_selected and green_selected:
-        print(abs(red_time - green_time))
-        if red_time - green_time < 0:
-            s_rect_red.opacity = 0
-            s_red_selected = True
-        else:
-            s_rect_green.opacity = 0
-            s_green_selected = True
-        green_selected = False
-        red_selected = False
-    elif blue_selected and yellow_selected:
-        if blue_time - yellow_time < 0:
-            s_rect_blue.opacity = 0
-            s_blue_selected = True
-        else:
-            s_rect_yellow.opacity = 0
-            s_yellow_selected = True
-        yellow_selected = False
-        blue_selected = False
-
-    # if do a WRONG selected
-    if red_selected:
-        if blue_selected:  # red --> blue --> green
-            blue_selected = False
-            red_selected = False
-        if yellow_selected:  # red --> yellow --> green
-            yellow_selected = False
-            red_selected = False
-
-    # if do a WRONG selected
-    if blue_selected:
-        if red_selected:  # blue --> red --> yellow
-            red_selected = False
-            blue_selected = False
-        if green_selected:  # blue --> green --> yellow
-            green_selected = False
-            blue_selected = False
-
-    # if do a WRONG selected
-    if green_selected:
-        if blue_selected:  # green --> blue --> red
-            blue_selected = False
-            green_selected = False
-        if yellow_selected:  # green --> yellow --> red
-            yellow_selected = False
-            green_selected = False
-
-    # if do a WRONG selected
-    if yellow_selected:
-        if red_selected:  # yellow --> red --> blue
-            red_selected = False
-            yellow_selected = False
-        if green_selected:  # yellow --> green --> blue
-            green_selected = False
-            yellow_selected = False
-
-    # draw mouse zone
-    mouse_zone.draw()
-
-    # draw rect frame
-    rect_red.draw()
-    rect_green.draw()
-    rect_blue.draw()
-    rect_yellow.draw()
-
-    # draw small rect
-    s_rect_red.draw()
-    s_rect_green.draw()
-    s_rect_blue.draw()
-    s_rect_yellow.draw()
-
-    # set the speed of small rect
-    s_rect_red.pos -= (0, speed_lists[0])
-    s_rect_green.pos -= (0, speed_lists[1])
-    s_rect_blue.pos -= (0, speed_lists[2])
-    s_rect_yellow.pos -= (0, speed_lists[3])
-
+# show some instructions
+def show_instruction():
+    """
+    a function for showing some instruction.
+    :return:
+    """
+    msg = visual.TextStim(win=win, text=u'请按空格开始任务', color='white', units='pix', height=30)
+    msg.draw()
     win.flip()
+    key = event.waitKeys(keyList=['space'])
 
-    # print('red pos: ' + str(s_rect_red.pos[1]))
 
-    if s_rect_red.pos[1] < -1080:
-        s_red_out = True
-    if s_rect_green.pos[1] < -1080:
-        s_green_out = True
-    if s_rect_blue.pos[1] < -1080:
-        s_blue_out = True
-    if s_rect_yellow.pos[1] < -1080:
-        s_yellow_out = True
+# define a function to run trials
+def run_trial(pos_lists, speed_lists, trial_index):
+    """
+    a function to run trials.
+    :param pos_lists: 小方块的初始位置
+    :param speed_lists: 小方块的速度
+    :param trial_index: 试次数
+    :return:
+    """
+    # set small rect
+    s_rect_red = visual.ShapeStim(win, vertices=pos_lists[0], fillColor='red',
+                                  lineColor=None)
+    s_rect_green = visual.ShapeStim(win, vertices=pos_lists[1], fillColor='green',
+                                    lineColor=None)
+    s_rect_blue = visual.ShapeStim(win, vertices=pos_lists[2], fillColor='blue',
+                                   lineColor=None)
+    s_rect_yellow = visual.ShapeStim(win, vertices=pos_lists[3], fillColor='yellow',
+                                     lineColor=None)
 
-    # define some rules to exit trail
-    if s_red_out and s_green_out and s_blue_out and s_yellow_out:  # 0 selected, miss 4
-        break
-    elif s_red_selected and s_green_selected and s_blue_selected and s_yellow_selected:  # 4 selected, miss 0
-        break
-    elif s_red_selected and s_green_out and s_blue_out and s_yellow_out:  # 1 red selected, miss 3
-        break
-    elif s_green_selected and s_red_out and s_blue_out and s_yellow_out:  # 1 green selected, miss 3
-        break
-    elif s_blue_selected and s_red_out and s_green_out and s_yellow_out:  # 1 blue selected, miss 3
-        break
-    elif s_yellow_selected and s_red_out and s_green_out and s_blue_out:  # 1 yellow selected, miss 3
-        break
-    elif s_red_selected and s_green_selected and s_blue_out and s_yellow_out:  # 2 red, green selected, miss 2
-        break
-    elif s_red_selected and s_blue_selected and s_green_out and s_yellow_out:  # 2 red, blue selected, miss 2
-        break
-    elif s_red_selected and s_yellow_selected and s_green_out and s_blue_out:  # 2 red, yellow selected, miss 2
-        break
-    elif s_green_selected and s_blue_selected and s_red_out and s_yellow_out:  # 2 green, blue selected, miss 2
-        break
-    elif s_green_selected and s_yellow_selected and s_red_out and s_blue_out:  # 2 green, yellow selected, miss 2
-        break
-    elif s_blue_selected and s_yellow_selected and s_red_out and s_green_out:  # 2 blue, yellow selected, miss 2
-        break
-    elif s_red_selected and s_green_selected and s_blue_selected and s_yellow_out:  # 3 r, g, b selected, miss 1
-        break
-    elif s_red_selected and s_green_selected and s_yellow_selected and s_blue_out:  # 3 r, g, y selected, miss 1
-        break
-    elif s_red_selected and s_blue_selected and s_yellow_selected and s_green_out:  # 3 r, b, y selected, miss 1
-        break
-    elif green_selected and blue_selected and s_yellow_selected and s_red_out:  # 3 g, b, y selected, miss 1
-        break
+    # define the select state of square as False
+    red_selected = False
+    green_selected = False
+    blue_selected = False
+    yellow_selected = False
 
+    # define the select state of small rect as False
+    s_red_selected = False
+    s_green_selected = False
+    s_blue_selected = False
+    s_yellow_selected = False
+
+    # define the small rect out the screen as False
+    s_red_out = False
+    s_green_out = False
+    s_blue_out = False
+    s_yellow_out = False
+
+    # define wrong select counts
+    red_wrong = 0
+    green_wrong = 0
+    blue_wrong = 0
+    yellow_wrong = 0
+
+    # set a timer
+    t = core.getTime()
+
+    # draw a cross FIXATION
+    while core.getTime() - t <= 0.5:
+        msg.setText('+')
+        msg.height = 50
+        msg.draw()
+        win.flip()
+
+    # draw rect
+    while not mouse.isPressedIn(rect_red):
+
+        mouse_zone.pos = mouse.getPos()
+
+        # if the mouse fall in the big rect
+        if rect_red.contains(mouse):
+            rect_red.fillColor = 'black'
+            rect_red.opacity = 0.6
+            red_selected = True
+            red_time = core.getTime() - t
+        else:
+            rect_red.fillColor = 'grey'
+            rect_red.opacity = 1
+
+        if rect_green.contains(mouse):
+            rect_green.fillColor = 'black'
+            rect_green.opacity = 0.6
+            green_selected = True
+            green_time = core.getTime() - t
+        else:
+            rect_green.fillColor = 'grey'
+            rect_green.opacity = 1
+
+        if rect_blue.contains(mouse):
+            rect_blue.fillColor = 'black'
+            rect_blue.opacity = 0.6
+            blue_selected = True
+            blue_time = core.getTime() - t
+        else:
+            rect_blue.fillColor = 'grey'
+            rect_blue.opacity = 1
+
+        if rect_yellow.contains(mouse):
+            rect_yellow.fillColor = 'black'
+            rect_yellow.opacity = 0.6
+            yellow_selected = True
+            yellow_time = core.getTime() - t
+        else:
+            rect_yellow.fillColor = 'grey'
+            rect_yellow.opacity = 1
+
+        if not (s_red_selected and s_green_selected):
+            # if do a right select
+            if red_selected and green_selected:
+                # print(abs(red_time - green_time))
+                if red_time - green_time < 0:
+                    s_rect_red.opacity = 0
+                    s_red_selected = True
+                    RT_red = abs(red_time - green_time)
+                    print('r: ' + str(RT_red))
+                else:
+                    s_rect_green.opacity = 0
+                    s_green_selected = True
+                    RT_green = abs(red_time - green_time)
+                    print('g: ' + str(RT_green))
+                green_selected = False
+                red_selected = False
+        if not (s_blue_selected and s_yellow_selected):
+            # if do a right select
+            if blue_selected and yellow_selected:
+                if blue_time - yellow_time < 0:
+                    s_rect_blue.opacity = 0
+                    s_blue_selected = True
+                    RT_blue = abs(blue_time - yellow_time)
+                    print('b: ' + str(RT_blue))
+                else:
+                    s_rect_yellow.opacity = 0
+                    s_yellow_selected = True
+                    RT_yellow = abs(blue_time - yellow_time)
+                    print('y: ' + str(RT_yellow))
+                yellow_selected = False
+                blue_selected = False
+
+        # if do a WRONG selected from red rect
+        if red_selected:
+            if blue_selected:  # red --> blue --> green
+                red_wrong += 1
+                print('r: ' + str(red_wrong))
+                blue_selected = False
+                red_selected = False
+            if yellow_selected:  # red --> yellow --> green
+                red_wrong += 1
+                print('r: ' + str(red_wrong))
+                yellow_selected = False
+                red_selected = False
+
+        # if do a WRONG selected from blue rect
+        if blue_selected:
+            if red_selected:  # blue --> red --> yellow
+                blue_wrong += 1
+                print('b: ' + str(blue_wrong))
+                red_selected = False
+                blue_selected = False
+            if green_selected:  # blue --> green --> yellow
+                blue_wrong += 1
+                print('b: ' + str(blue_wrong))
+                green_selected = False
+                blue_selected = False
+
+        # if do a WRONG selected from green rect
+        if green_selected:
+            if blue_selected:  # green --> blue --> red
+                green_wrong += 1
+                print('g: ' + str(green_wrong))
+                blue_selected = False
+                green_selected = False
+            if yellow_selected:  # green --> yellow --> red
+                green_wrong += 1
+                print('g: ' + str(green_wrong))
+                yellow_selected = False
+                green_selected = False
+
+        # if do a WRONG selected from yellow rect
+        if yellow_selected:
+            if red_selected:  # yellow --> red --> blue
+                yellow_wrong += 1
+                print('y: ' + str(yellow_wrong))
+                red_selected = False
+                yellow_selected = False
+            if green_selected:  # yellow --> green --> blue
+                yellow_wrong += 1
+                print('y: ' + str(yellow_wrong))
+                green_selected = False
+                yellow_selected = False
+
+        # draw mouse zone
+        mouse_zone.draw()
+
+        # draw rect frame
+        rect_red.draw()
+        rect_green.draw()
+        rect_blue.draw()
+        rect_yellow.draw()
+
+        # draw small rect
+        s_rect_red.draw()
+        s_rect_green.draw()
+        s_rect_blue.draw()
+        s_rect_yellow.draw()
+
+        # set the speed of small rect
+        s_rect_red.pos -= (0, speed_lists[0])
+        s_rect_green.pos -= (0, speed_lists[1])
+        s_rect_blue.pos -= (0, speed_lists[2])
+        s_rect_yellow.pos -= (0, speed_lists[3])
+
+        win.flip()
+
+        # print('red pos: ' + str(s_rect_red.pos[1]))
+
+        if s_rect_red.pos[1] < -1080 and not s_red_selected:
+            s_red_out = True
+            RT_red = 'NA'
+        if s_rect_green.pos[1] < -1080 and not s_green_selected:
+            s_green_out = True
+            RT_green = 'NA'
+        if s_rect_blue.pos[1] < -1080 and not s_blue_selected:
+            s_blue_out = True
+            RT_blue = 'NA'
+        if s_rect_yellow.pos[1] < -1080 and not s_yellow_selected:
+            s_yellow_out = True
+            RT_yellow = 'NA'
+
+        # define some rules to exit trail
+        # 选中0，错过1，C(4, 0) = 1种可能
+        if s_red_out and s_green_out and s_blue_out and s_yellow_out:  # 0 selected, miss 4
+            break
+
+        # 选中4，错过0，C(4, 4) = 1种可能
+        elif s_red_selected and s_green_selected and s_blue_selected and s_yellow_selected:  # 4 selected, miss 0
+            break
+
+        # 选中1，错过3，C(4, 1) = 4种可能
+        elif s_red_selected and s_green_out and s_blue_out and s_yellow_out:  # 1 red selected, miss 3
+            break
+        elif s_green_selected and s_red_out and s_blue_out and s_yellow_out:  # 1 green selected, miss 3
+            break
+        elif s_blue_selected and s_red_out and s_green_out and s_yellow_out:  # 1 blue selected, miss 3
+            break
+        elif s_yellow_selected and s_red_out and s_green_out and s_blue_out:  # 1 yellow selected, miss 3
+            break
+
+        # 选中2，错过2，C(4, 2) = 6种可能
+        elif s_red_selected and s_green_selected and s_blue_out and s_yellow_out:  # 2 red, green selected, miss 2
+            break
+        elif s_red_selected and s_blue_selected and s_green_out and s_yellow_out:  # 2 red, blue selected, miss 2
+            break
+        elif s_red_selected and s_yellow_selected and s_green_out and s_blue_out:  # 2 red, yellow selected, miss 2
+            break
+        elif s_green_selected and s_blue_selected and s_red_out and s_yellow_out:  # 2 green, blue selected, miss 2
+            break
+        elif s_green_selected and s_yellow_selected and s_red_out and s_blue_out:  # 2 green, yellow selected, miss 2
+            break
+        elif s_blue_selected and s_yellow_selected and s_red_out and s_green_out:  # 2 blue, yellow selected, miss 2
+            break
+
+        # 选中3，错过1，C(4, 3) = 4种可能
+        elif s_red_selected and s_green_selected and s_blue_selected and s_yellow_out:  # 3 r, g, b selected, miss 1
+            break
+        elif s_red_selected and s_green_selected and s_yellow_selected and s_blue_out:  # 3 r, g, y selected, miss 1
+            break
+        elif s_red_selected and s_blue_selected and s_yellow_selected and s_green_out:  # 3 r, b, y selected, miss 1
+            break
+        elif s_green_selected and s_blue_selected and s_yellow_selected and s_red_out:  # 3 g, b, y selected, miss 1
+            break
+
+    # get trail time
+    trial_time = core.getTime() - t
+
+    # write trial info to CSV
+    red_data = [trial_index, 'red', s_red_selected, red_wrong, s_red_out, RT_red, trial_time]
+    sub_data.write(','.join(map(str, red_data)) + '\n')
+    green_data = [trial_index, 'green', s_green_selected, green_wrong, s_green_out, RT_green, trial_time]
+    sub_data.write(','.join(map(str, green_data)) + '\n')
+    blue_data = [trial_index, 'blue', s_blue_selected, blue_wrong, s_blue_out, RT_blue, trial_time]
+    sub_data.write(','.join(map(str, blue_data)) + '\n')
+    yellow_data = [trial_index, 'yellow', s_yellow_selected, yellow_wrong, s_yellow_out, RT_yellow, trial_time]
+    sub_data.write(','.join(map(str, yellow_data)) + '\n')
+
+
+show_instruction()
+
+random.Random(12345).shuffle(s_rv_vertices)
+trial_index = 1
+for i in range(10):
+    s_rv_lists = random.sample(s_rv_vertices, k=4)  # random sample
+    print(s_rv_lists)
+    run_trial(s_rv_lists, speed_lists, trial_index)
+    trial_index += 1
+
+sub_data.close()
 
 win.close()
 core.quit()
