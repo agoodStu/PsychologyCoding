@@ -297,7 +297,6 @@ genv.setCalibrationSounds('', '', '')
 # Request Pylink to use the PsychoPy window we opened above for calibration
 pylink.openGraphicsEx(genv)
 
-
 # 创建Mouse类，用来初始化鼠标
 mouse = event.Mouse()
 win.mouseVisible = False
@@ -477,7 +476,7 @@ def run_trial(pos_lists, speed_lists, trial_index):
     el_tracker.sendCommand("record_status_message '%s'" % status_msg)
 
     # draw a reference grid on the Host PC screen
-    # For details, See section 25.7 'Drawing Commands' in the
+    # For details, See section 25.6 'Drawing Commands' in the
     # EyeLink Programmers Guide manual
     # line_hor = (scnWidth / 2.0 - start_x, scnHeight / 2.0,
     #             scnWidth / 2.0 + start_x, scnHeight / 2.0)
@@ -486,6 +485,19 @@ def run_trial(pos_lists, speed_lists, trial_index):
     # el_tracker.sendCommand('clear_screen 0')  # clear the host Display
     # el_tracker.sendCommand('draw_line %d %d %d %d 15' % line_hor)
     # el_tracker.sendCommand('draw_line %d %d %d %d 15' % line_ver)
+    red_box = (rv_red[0][0] + scn_width / 2, scn_height / 2 - rv_red[0][1],
+               rv_red[2][0] + scn_width / 2, scn_height / 2 - rv_red[2][1])
+    blue_box = (rv_blue[0][0] + scn_width / 2, scn_height / 2 - rv_blue[0][1],
+                rv_blue[2][0] + scn_width / 2, scn_height / 2 - rv_blue[2][1])
+    green_box = (rv_green[0][0] + scn_width / 2, scn_height / 2 - rv_green[0][1],
+                 rv_green[2][0] + scn_width / 2, scn_height / 2 - rv_green[2][1])
+    yellow_box = (rv_yellow[0][0] + scn_width / 2, scn_height / 2 - rv_yellow[0][1],
+                  rv_yellow[2][0] + scn_width / 2, scn_height / 2 - rv_yellow[2][1])
+    el_tracker.sendCommand('clear_screen 0')  # clear the host Display
+    el_tracker.sendCommand('draw_box %d %d %d %d 15' % red_box)
+    el_tracker.sendCommand('draw_box %d %d %d %d 15' % blue_box)
+    el_tracker.sendCommand('draw_box %d %d %d %d 15' % green_box)
+    el_tracker.sendCommand('draw_box %d %d %d %d 15' % yellow_box)
 
     # put tracker in idle/offline mode before recording
     el_tracker.setOfflineMode()
@@ -541,6 +553,7 @@ def run_trial(pos_lists, speed_lists, trial_index):
     t = core.getTime()
 
     # draw a cross FIXATION
+    el_tracker.sendMessage('FIXATION_SCREEN')
     while core.getTime() - t <= 0.5:
         msg.setText('+')
         msg.height = 50
@@ -549,8 +562,6 @@ def run_trial(pos_lists, speed_lists, trial_index):
 
     # draw rect
     while True:
-
-        # win.getMovieFrame()
         # abort the current trial if the tracker is no longer recording
         error = el_tracker.isRecording()
         if error is not pylink.TRIAL_OK:
@@ -592,6 +603,48 @@ def run_trial(pos_lists, speed_lists, trial_index):
         s_rect_green.draw()
         s_rect_blue.draw()
         s_rect_yellow.draw()
+        frame_num += 1
+
+        if frame_num == 1:
+            el_tracker.sendMessage('TARGET_ONSET')
+
+            # record a message to let Data Viewer know where to find
+            # the IA file for the current trial.
+            ias_path = os.path.join('aoi', ias)
+            el_tracker.sendMessage('!V IAREA FILE %s' % ias_path)
+        else:
+            # 对四个大方块设置兴趣区
+            # RECTANGLE id left top right bottom [label]
+            # el_tracker.sendMessage('!V IAREA RECTANGLE %s %d %d %d %d %s' %
+            #                        (1, rv_red[0][0], rv_red[0][1],
+            #                         rv_red[2][0], rv_red[2][1], 'red'))
+            # el_tracker.sendMessage('!V IAREA RECTANGLE %s %d %d %d %d %s' %
+            #                        (2, rv_blue[0][0], rv_blue[0][1],
+            #                         rv_blue[2][0], rv_blue[2][1], 'blue'))
+            # el_tracker.sendMessage('!V IAREA RECTANGLE %s %d %d %d %d %s' %
+            #                        (3, rv_green[0][0], rv_green[0][1],
+            #                         rv_green[2][0], rv_green[2][1], 'red'))
+            # el_tracker.sendMessage('!V IAREA RECTANGLE %s %d %d %d %d %s' %
+            #                        (4, rv_yellow[0][0], rv_yellow[0][1],
+            #                         rv_yellow[2][0], rv_yellow[2][1], 'red'))
+            # el_tracker.sendMessage('!V IAREA RECTANGLE %s %d %d %d %d %s' %
+            #                        (5, rv_red[1][0], rv_red[1][1],
+            #                         rv_green[3][0], rv_green[3][1], 'center'))
+            ias_file.write('RECTANGLE %s %d %d %d %d %s\n' %
+                           (1, rv_red[0][0], rv_red[0][1],
+                            rv_red[2][0], rv_red[2][1], 'red'))
+            ias_file.write('RECTANGLE %s %d %d %d %d %s\n' %
+                           (2, rv_blue[0][0], rv_blue[0][1],
+                            rv_blue[2][0], rv_blue[2][1], 'blue'))
+            ias_file.write('RECTANGLE %s %d %d %d %d %s\n' %
+                           (3, rv_green[0][0], rv_green[0][1],
+                            rv_green[2][0], rv_green[2][1], 'green'))
+            ias_file.write('RECTANGLE %s %d %d %d %d %s\n' %
+                           (4, rv_yellow[0][0], rv_yellow[0][1],
+                            rv_yellow[2][0], rv_yellow[2][1], 'yellow'))
+            ias_file.write('RECTANGLE %s %d %d %d %d %s\n' %
+                           (5, rv_red[1][0], rv_red[1][1],
+                            rv_green[3][0], rv_green[3][1], 'center'))
 
         # 定义小方块下落的速度
         s_rect_red.pos -= (0, speed_lists[0])
@@ -799,6 +852,35 @@ def run_trial(pos_lists, speed_lists, trial_index):
     # 结束While循环时，计算试次所需要的时间
     trial_time = core.getTime() - t
 
+    el_tracker.sendMessage('BLANK_SCREEN')
+    clear_screen(win)
+    core.wait(0.5)
+
+    # send a message to clear the Data Viewer
+    el_tracker.sendMessage('!V CLEAR 128 128 128')
+
+    # close the IAS file
+    ias_file.close()
+
+    # record trial variables to the EDF data file
+    el_tracker.sendMessage('!V TRIAL_VAR s_red_selected %s' % s_red_selected)
+    el_tracker.sendMessage('!V TRIAL_VAR s_blue_selected %s' % s_blue_selected)
+    el_tracker.sendMessage('!V TRIAL_VAR s_green_selected %s' % s_green_selected)
+    el_tracker.sendMessage('!V TRIAL_VAR s_yellow_selected %s' % s_yellow_selected)
+    pylink.msecDelay(4)  # take a break of 4 millisecond
+    el_tracker.sendMessage('!V TRIAL_VAR s_red_out %s' % s_red_out)
+    el_tracker.sendMessage('!V TRIAL_VAR s_blue_out %s' % s_blue_out)
+    el_tracker.sendMessage('!V TRIAL_VAR s_green_out %s' % s_green_out)
+    el_tracker.sendMessage('!V TRIAL_VAR s_yellow_out %s' % s_yellow_out)
+    pylink.msecDelay(4)  # take a break of 4 millisecond
+    el_tracker.sendMessage('!V TRIAL_VAR red_wrong %s' % red_wrong)
+    el_tracker.sendMessage('!V TRIAL_VAR blue_wrong %s' % blue_wrong)
+    el_tracker.sendMessage('!V TRIAL_VAR green_wrong %s' % green_wrong)
+    el_tracker.sendMessage('!V TRIAL_VAR yellow_wrong %s' % yellow_wrong)
+
+    # send a 'TRIAL_RESULT' message to mark the end of trial
+    el_tracker.sendMessage('TRIAL_RESULT %d' % pylink.TRIAL_OK)
+
     # write trial info to CSV
     red_data = [trial_index, 'red', s_red_selected, red_wrong, s_red_out, RT_red, trial_time]
     sub_data.write(','.join(map(str, red_data)) + '\n')
@@ -810,8 +892,21 @@ def run_trial(pos_lists, speed_lists, trial_index):
     sub_data.write(','.join(map(str, yellow_data)) + '\n')
 
 
-# 呈现指导语
-show_instruction()
+# Show the task instructions
+task_msg = u'你的任务是通过视线选择下落的小方块\n'
+if dummy_mode:
+    task_msg = task_msg + u'\n\n现在，请按回车键开始任务'
+else:
+    task_msg = task_msg + u'\n\n现在，请按回车键开始校准'
+show_msg(win, task_msg, wait_for_keypress=True)
+
+# skip this step if running the script in Dummy Mode
+if not dummy_mode:
+    try:
+        el_tracker.doTrackerSetup()
+    except RuntimeError as err:
+        print('ERROR:', err)
+        el_tracker.exitCalibration()
 
 random.Random(12345).shuffle(s_rv_vertices)
 trial_index = 1
@@ -825,5 +920,4 @@ for i in range(10):
 
 sub_data.close()
 
-win.close()
-core.quit()
+terminate_task()
