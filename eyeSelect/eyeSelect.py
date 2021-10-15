@@ -18,21 +18,7 @@ from pylink import *
 # 当实现落入大方块位置后，改变大方块填充颜色
 # 填充为纯黑，将透明度设置为0.6，以突出眼动指示圈
 
-# step 1.2: 小方块
-# step 1.2.1: 小方块的生成
-# 随机生成小方块的坐标点
-# 因为小方块都是屏幕顶部运动，因为位置有一定规律，即X值变化，Y值固定
-# 需要随机生成X值，再根据小方块边长，即可确定小方块四个点的坐标
-# step 1.2.2: 小方块的运动
-# 每次落下的数量随机，在3~5之间
-# 可采取不放回抽样
 
-# step 1.3 试次退出条件
-# - 选中 0，Miss 4，C(4, 0) = 1 种可能
-# - 选中 1，Miss 3，C(4, 1) = 4 种可能
-# - 选中 2，Miss 2，C(4, 2) = 6 种可能
-# - 选中 3，Miss 1，C(4, 3) = 4 种可能
-# - 选中 4，Miss 0，C(4, 4) = 1 种可能
 
 # step 1.4: 行为因变量
 # step 1.4.1: 反应时
@@ -58,14 +44,6 @@ from pylink import *
 # 两个大方块之间的扫视要在1000ms内完成
 # step 2.2.2: 计算原理
 #
-
-# bug
-# 2021.10.08
-# 选中一组后，跳转到另一组时，会被记为错误
-# 如选择”红色-绿色-红色“（此为正确选择路径）
-# 再跳转到”蓝色“或”绿色“方块（也是正确选择路径）
-# 会记“红色”或“绿色”选择错误
-# 解决方法：在判断错误选择时，看小方块的选择状态
 
 # 配置log信息
 LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
@@ -631,20 +609,20 @@ def run_trial(pos_lists, speed_lists, trial_index):
             #                        (5, rv_red[1][0], rv_red[1][1],
             #                         rv_green[3][0], rv_green[3][1], 'center'))
             ias_file.write('RECTANGLE %s %d %d %d %d %s\n' %
-                           (1, rv_red[0][0], rv_red[0][1],
-                            rv_red[2][0], rv_red[2][1], 'red'))
+                           (1, rv_red[0][0] + scn_width / 2, scn_height / 2 - rv_red[0][1],
+                            rv_red[2][0] + scn_width / 2, scn_height / 2 - rv_red[2][1], 'red'))
             ias_file.write('RECTANGLE %s %d %d %d %d %s\n' %
-                           (2, rv_blue[0][0], rv_blue[0][1],
-                            rv_blue[2][0], rv_blue[2][1], 'blue'))
+                           (2, rv_blue[0][0] + scn_width / 2, scn_height / 2 - rv_blue[0][1],
+                            rv_blue[2][0] + scn_width / 2, scn_height / 2 - rv_blue[2][1], 'blue'))
             ias_file.write('RECTANGLE %s %d %d %d %d %s\n' %
-                           (3, rv_green[0][0], rv_green[0][1],
-                            rv_green[2][0], rv_green[2][1], 'green'))
+                           (3, rv_green[0][0] + scn_width / 2, scn_height / 2 - rv_green[0][1],
+                            rv_green[2][0] + scn_width / 2, scn_height / 2 - rv_green[2][1], 'green'))
             ias_file.write('RECTANGLE %s %d %d %d %d %s\n' %
-                           (4, rv_yellow[0][0], rv_yellow[0][1],
-                            rv_yellow[2][0], rv_yellow[2][1], 'yellow'))
+                           (4, rv_yellow[0][0] + scn_width / 2, scn_height / 2 - rv_yellow[0][1],
+                            rv_yellow[2][0] + scn_width / 2, scn_height / 2 - rv_yellow[2][1], 'yellow'))
             ias_file.write('RECTANGLE %s %d %d %d %d %s\n' %
-                           (5, rv_red[1][0], rv_red[1][1],
-                            rv_green[3][0], rv_green[3][1], 'center'))
+                           (5, rv_red[1][0] + scn_width / 2, scn_height / 2 - rv_red[1][1],
+                            rv_green[3][0] + scn_width / 2, scn_height / 2 - rv_green[3][1], 'center'))
 
         # 定义小方块下落的速度
         s_rect_red.pos -= (0, speed_lists[0])
@@ -658,38 +636,157 @@ def run_trial(pos_lists, speed_lists, trial_index):
         # 如果移出，则恢复原来的属性
         # 落在红色大方块区域
         if rect_red.contains(mouse):
-
             rect_red.fillColor = 'black'
-            rect_red.opacity = 0.6
-            red_selected = True
             red_time = core.getTime() - t
+            while True:
+                s_rect_red.pos -= (0, speed_lists[0])
+                s_rect_green.pos -= (0, speed_lists[1])
+                s_rect_blue.pos -= (0, speed_lists[2])
+                s_rect_yellow.pos -= (0, speed_lists[3])
+                mouse_zone.pos = mouse.getPos()
+
+                if rect_red.opacity >= 0.5:
+                    rect_red.opacity -= 0.02
+
+                mouse_zone.draw()
+
+                rect_red.draw()
+                rect_green.draw()
+                rect_blue.draw()
+                rect_yellow.draw()
+
+                s_rect_red.draw()
+                s_rect_green.draw()
+                s_rect_blue.draw()
+                s_rect_yellow.draw()
+                win.flip()
+                red_stay = core.getTime() - t
+                if red_stay - red_time > 0.1:
+                    logging.info('red_stay: ' + str(red_stay - red_time))
+                    logging.info('red_select')
+                    red_selected = True
+                    logging.info('red_break_1')
+                    break
+                elif not rect_red.contains(mouse):
+                    logging.info('red_break_2')
+                    break
         else:
             rect_red.fillColor = 'grey'
             rect_red.opacity = 1
         # 落在绿色大方块区域
         if rect_green.contains(mouse):
             rect_green.fillColor = 'black'
-            rect_green.opacity = 0.6
-            green_selected = True
             green_time = core.getTime() - t
+            while True:
+                s_rect_red.pos -= (0, speed_lists[0])
+                s_rect_green.pos -= (0, speed_lists[1])
+                s_rect_blue.pos -= (0, speed_lists[2])
+                s_rect_yellow.pos -= (0, speed_lists[3])
+                mouse_zone.pos = mouse.getPos()
+
+                if rect_green.opacity >= 0.5:
+                    rect_green.opacity -= 0.02
+
+                mouse_zone.draw()
+
+                rect_red.draw()
+                rect_green.draw()
+                rect_blue.draw()
+                rect_yellow.draw()
+
+                s_rect_red.draw()
+                s_rect_green.draw()
+                s_rect_blue.draw()
+                s_rect_yellow.draw()
+                win.flip()
+                green_stay = core.getTime() - t
+                if green_stay - green_time > 0.1:
+                    logging.info('green_z: ' + str(green_stay - green_time))
+                    logging.info('green_select')
+                    green_selected = True
+                    logging.info('green_break_1')
+                    break
+                if not rect_green.contains(mouse):
+                    logging.info('green_break_2')
+                    break
         else:
             rect_green.fillColor = 'grey'
             rect_green.opacity = 1
         # 落在蓝色大方块区域
         if rect_blue.contains(mouse):
             rect_blue.fillColor = 'black'
-            rect_blue.opacity = 0.6
-            blue_selected = True
             blue_time = core.getTime() - t
+            while True:
+                s_rect_red.pos -= (0, speed_lists[0])
+                s_rect_green.pos -= (0, speed_lists[1])
+                s_rect_blue.pos -= (0, speed_lists[2])
+                s_rect_yellow.pos -= (0, speed_lists[3])
+                mouse_zone.pos = mouse.getPos()
+
+                if rect_blue.opacity >= 0.5:
+                    rect_blue.opacity -= 0.02
+
+                mouse_zone.draw()
+
+                rect_red.draw()
+                rect_green.draw()
+                rect_blue.draw()
+                rect_yellow.draw()
+
+                s_rect_red.draw()
+                s_rect_green.draw()
+                s_rect_blue.draw()
+                s_rect_yellow.draw()
+                win.flip()
+                blue_stay = core.getTime() - t
+                if blue_stay - blue_time > 0.1:
+                    logging.info('blue_z: ' + str(blue_stay - blue_time))
+                    logging.info('blue_select')
+                    blue_selected = True
+                    logging.info('blue_break_1')
+                    break
+                if not rect_blue.contains(mouse):
+                    logging.info('blue_break_2')
+                    break
         else:
             rect_blue.fillColor = 'grey'
             rect_blue.opacity = 1
         # 落在黄色大方块区域
         if rect_yellow.contains(mouse):
             rect_yellow.fillColor = 'black'
-            rect_yellow.opacity = 0.6
-            yellow_selected = True
             yellow_time = core.getTime() - t
+            while True:
+                s_rect_red.pos -= (0, speed_lists[0])
+                s_rect_green.pos -= (0, speed_lists[1])
+                s_rect_blue.pos -= (0, speed_lists[2])
+                s_rect_yellow.pos -= (0, speed_lists[3])
+                mouse_zone.pos = mouse.getPos()
+
+                if rect_yellow.opacity >= 0.5:
+                    rect_yellow.opacity -= 0.02
+
+                mouse_zone.draw()
+
+                rect_red.draw()
+                rect_green.draw()
+                rect_blue.draw()
+                rect_yellow.draw()
+
+                s_rect_red.draw()
+                s_rect_green.draw()
+                s_rect_blue.draw()
+                s_rect_yellow.draw()
+                win.flip()
+                yellow_stay = core.getTime() - t
+                if yellow_stay - blue_time > 0.1:
+                    logging.info('yellow_z: ' + str(yellow_stay - blue_time))
+                    logging.info('yellow_select')
+                    yellow_selected = True
+                    logging.info('yellow_break_1')
+                    break
+                if not rect_yellow.contains(mouse):
+                    logging.info('yellow_break_2')
+                    break
         else:
             rect_yellow.fillColor = 'grey'
             rect_yellow.opacity = 1
