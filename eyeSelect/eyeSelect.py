@@ -7,56 +7,19 @@ import numpy as np
 import random, sys, logging, os, time, pylink
 from pylink import *
 
-# 思路
-# step 1：搭建界面
-
-# step 1.1: 四个大方块；
-# step 1.1.1: 大方块生成
-# 注意填充色、线条颜色，位置
-# 位置可以通过列表预先定义，颜色使用系统默认RGB
-# step 1.1.2 大方块被选中后的效果
-# 当实现落入大方块位置后，改变大方块填充颜色
-# 填充为纯黑，将透明度设置为0.6，以突出眼动指示圈
-
-
-
-# step 1.4: 行为因变量
-# step 1.4.1: 反应时
-# 定义：如果被试选择正确，则返回被试进入第一个方块的时间-进入第二个方块的时间
-# step 1.4.2: 错误率
-# 定义：被试在选择第一个方块后，没有进入位置相反的方块
-# 怎么样计算？？
-# step 1.4.3: Miss率
-# 定义：被试没有选择的小方块，掉出屏幕
-# step 1.4.4: 任务时间
-# 定义：一个试次中，任务开始到结束的时间
-
-# step 1.5 Dlg信息
-# 被试姓名、年龄、等等
-
-# step 2: 眼动部分
-# step 2.1: 眼动位置指示
-# 设置一个圆形，它的位置随眼动变化
-# 以告诉被试目前视线再屏幕上的地方
-# step 2.2: 计算扫视部分
-# step 2.2.1: 计算规则
-# 如果眼睛位置落入区域100ms，则为成功
-# 两个大方块之间的扫视要在1000ms内完成
-# step 2.2.2: 计算原理
-#
 
 # 配置log信息
 LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
 logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
 
 # dummy_mode
-dummy_mode = True
+dummy_mode = False
 
 # full_screen or not
-full_screen = False
+full_screen = True
 
-# radius of the elliptical IA
-ia_radius = 25
+# 停留在大方块多长秒才能选中
+stay_time = 0.1
 
 # screen size
 scn_width, scn_height = (1920, 1080)
@@ -110,7 +73,7 @@ while True:
 
 # set up a folder to store the EDF data files and the associated resources
 # e.g., files defining the interest areas used in each trial
-results_folder = os.path.join(os.path.dirname(__file__), 'results/expSelect')
+results_folder = os.path.join(os.path.dirname(__file__), 'results/expSelect/eyeData')
 if not os.path.exists(results_folder):
     os.makedirs(results_folder)
 
@@ -315,8 +278,14 @@ def clear_screen(win):
 
 
 def show_msg(win, text, wait_for_keypress=True, any_key_to_terminate=True):
-    '''Show task instructions on screen'''
-
+    """
+    Show task instructions on screen
+    :param win:
+    :param text:
+    :param wait_for_keypress:
+    :param any_key_to_terminate:
+    :return:
+    """
     msg = visual.TextStim(win, text,
                           color=genv.getForegroundColor(),
                           wrapWidth=scn_width / 2,
@@ -428,6 +397,35 @@ def terminate_task():
     # quit PsychoPy
     core.quit()
     sys.exit()
+
+
+def get_mouse_eye_pos():
+    """
+    获取鼠标或眼睛实时位置
+    :return:
+    """
+    if dummy_mode:
+        mouse_zone.pos = mouse.getPos()
+    else:
+        eye_used = el_tracker.eyeAvailable()
+        # logging.info('eye_used: ' + str(eye_used))
+        if eye_used == 2:
+            eye_used = 0
+
+        ldata = el_tracker.getNewestSample()
+        # logging.info('ldata: ' + str(ldata))
+        if ldata is not None:
+            if eye_used == 1 and ldata.isRightSample():
+                # print('right' + str(ldata.getRightEye().getGaze()))
+                gaze_pos = ldata.getRightEye().getGaze()
+                current_eye_pos = (gaze_pos[0] - scn_width / 2, scn_height / 2 - gaze_pos[1])
+            elif eye_used == 0 and ldata.isLeftSample():
+                # print('left' + str(ldata.getLeftEye().getGaze()))
+                gaze_pos = ldata.getLeftEye().getGaze()
+                current_eye_pos = (gaze_pos[0] - scn_width / 2, scn_height / 2 - gaze_pos[1])
+
+            mouse_zone.pos = current_eye_pos
+            mouse.setPos(current_eye_pos)
 
 
 # define a function to run trials
@@ -565,8 +563,7 @@ def run_trial(pos_lists, speed_lists, trial_index):
                 return pylink.ABORT_EXPT
 
         # 获取鼠标或眼睛实时位置
-        mouse_zone.pos = mouse.getPos()
-
+        get_mouse_eye_pos()
         # draw mouse zone
         mouse_zone.draw()
 
@@ -643,7 +640,8 @@ def run_trial(pos_lists, speed_lists, trial_index):
                 s_rect_green.pos -= (0, speed_lists[1])
                 s_rect_blue.pos -= (0, speed_lists[2])
                 s_rect_yellow.pos -= (0, speed_lists[3])
-                mouse_zone.pos = mouse.getPos()
+                # mouse_zone.pos = mouse.getPos()
+                get_mouse_eye_pos()
 
                 if rect_red.opacity >= 0.5:
                     rect_red.opacity -= 0.02
@@ -661,7 +659,7 @@ def run_trial(pos_lists, speed_lists, trial_index):
                 s_rect_yellow.draw()
                 win.flip()
                 red_stay = core.getTime() - t
-                if red_stay - red_time > 0.1:
+                if red_stay - red_time > stay_time:
                     logging.info('red_stay: ' + str(red_stay - red_time))
                     logging.info('red_select')
                     red_selected = True
@@ -682,7 +680,8 @@ def run_trial(pos_lists, speed_lists, trial_index):
                 s_rect_green.pos -= (0, speed_lists[1])
                 s_rect_blue.pos -= (0, speed_lists[2])
                 s_rect_yellow.pos -= (0, speed_lists[3])
-                mouse_zone.pos = mouse.getPos()
+                # mouse_zone.pos = mouse.getPos()
+                get_mouse_eye_pos()
 
                 if rect_green.opacity >= 0.5:
                     rect_green.opacity -= 0.02
@@ -700,7 +699,7 @@ def run_trial(pos_lists, speed_lists, trial_index):
                 s_rect_yellow.draw()
                 win.flip()
                 green_stay = core.getTime() - t
-                if green_stay - green_time > 0.1:
+                if green_stay - green_time > stay_time:
                     logging.info('green_z: ' + str(green_stay - green_time))
                     logging.info('green_select')
                     green_selected = True
@@ -721,7 +720,8 @@ def run_trial(pos_lists, speed_lists, trial_index):
                 s_rect_green.pos -= (0, speed_lists[1])
                 s_rect_blue.pos -= (0, speed_lists[2])
                 s_rect_yellow.pos -= (0, speed_lists[3])
-                mouse_zone.pos = mouse.getPos()
+                # mouse_zone.pos = mouse.getPos()
+                get_mouse_eye_pos()
 
                 if rect_blue.opacity >= 0.5:
                     rect_blue.opacity -= 0.02
@@ -739,7 +739,7 @@ def run_trial(pos_lists, speed_lists, trial_index):
                 s_rect_yellow.draw()
                 win.flip()
                 blue_stay = core.getTime() - t
-                if blue_stay - blue_time > 0.1:
+                if blue_stay - blue_time > stay_time:
                     logging.info('blue_z: ' + str(blue_stay - blue_time))
                     logging.info('blue_select')
                     blue_selected = True
@@ -760,7 +760,8 @@ def run_trial(pos_lists, speed_lists, trial_index):
                 s_rect_green.pos -= (0, speed_lists[1])
                 s_rect_blue.pos -= (0, speed_lists[2])
                 s_rect_yellow.pos -= (0, speed_lists[3])
-                mouse_zone.pos = mouse.getPos()
+                # mouse_zone.pos = mouse.getPos()
+                get_mouse_eye_pos()
 
                 if rect_yellow.opacity >= 0.5:
                     rect_yellow.opacity -= 0.02
@@ -778,8 +779,8 @@ def run_trial(pos_lists, speed_lists, trial_index):
                 s_rect_yellow.draw()
                 win.flip()
                 yellow_stay = core.getTime() - t
-                if yellow_stay - blue_time > 0.1:
-                    logging.info('yellow_z: ' + str(yellow_stay - blue_time))
+                if yellow_stay - yellow_time > stay_time:
+                    logging.info('yellow_z: ' + str(yellow_stay - yellow_time))
                     logging.info('yellow_select')
                     yellow_selected = True
                     logging.info('yellow_break_1')
@@ -974,6 +975,7 @@ def run_trial(pos_lists, speed_lists, trial_index):
     el_tracker.sendMessage('!V TRIAL_VAR blue_wrong %s' % blue_wrong)
     el_tracker.sendMessage('!V TRIAL_VAR green_wrong %s' % green_wrong)
     el_tracker.sendMessage('!V TRIAL_VAR yellow_wrong %s' % yellow_wrong)
+    pylink.msecDelay(4)  # take a break of 4 millisecond
 
     # send a 'TRIAL_RESULT' message to mark the end of trial
     el_tracker.sendMessage('TRIAL_RESULT %d' % pylink.TRIAL_OK)
@@ -992,9 +994,9 @@ def run_trial(pos_lists, speed_lists, trial_index):
 # Show the task instructions
 task_msg = u'你的任务是通过视线选择下落的小方块\n'
 if dummy_mode:
-    task_msg = task_msg + u'\n\n现在，请按回车键开始任务'
+    task_msg = task_msg + u'\n\n现在，请按空格键开始任务'
 else:
-    task_msg = task_msg + u'\n\n现在，请按回车键开始校准'
+    task_msg = task_msg + u'\n\n现在，请按空格键开始校准'
 show_msg(win, task_msg, wait_for_keypress=True)
 
 # skip this step if running the script in Dummy Mode
@@ -1004,6 +1006,10 @@ if not dummy_mode:
     except RuntimeError as err:
         print('ERROR:', err)
         el_tracker.exitCalibration()
+
+if not dummy_mode:
+    task_msg = u'校准结束，按空格开始任务'
+    show_msg(win, task_msg, wait_for_keypress=True)
 
 random.Random(12345).shuffle(s_rv_vertices)
 trial_index = 1
