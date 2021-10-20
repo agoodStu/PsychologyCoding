@@ -3,9 +3,9 @@
 from psychopy import event, visual, core, monitors, gui
 from string import digits, ascii_letters
 from EyeLinkCoreGraphicsPsychoPy import EyeLinkCoreGraphicsPsychoPy
+from pylink import *
 import numpy as np
 import random, sys, logging, os, time, pylink
-from pylink import *
 
 
 # 配置log信息
@@ -13,7 +13,7 @@ LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
 logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
 
 # dummy_mode
-dummy_mode = False
+dummy_mode = True
 
 # full_screen or not
 full_screen = True
@@ -26,7 +26,8 @@ scn_width, scn_height = (1920, 1080)
 
 # 在1 - 4 之间随机生成4个整数，为小方块下落的速度
 # speed_lists = np.random.randint(3, 7, 4)
-speed_lists = np.random.randint(1, 4, 4)
+np.random.seed(seed=123)
+speed_lists = np.random.randint(1, 3, 4)
 
 # 小方块的左上点x坐标
 s_rv_dot = []
@@ -45,6 +46,7 @@ for i in s_rv_dot:
         [(i, 540), (i + s_rv_len, 540),
          (i + s_rv_len, 540 - s_rv_len), (i, 540 - s_rv_len)]
     )
+logging.info('length of s_rv_vertices: ' + str(len(s_rv_vertices)))
 
 # 输入被试信息
 while True:
@@ -172,11 +174,13 @@ el_tracker.sendCommand("calibration_type = HV5")
 # You need a supported gamepad/button box that is connected to the Host PC
 el_tracker.sendCommand("button_function 5 'accept_target_fixation'")
 
+# 1920 * 1080 = 2073600
+
 # 大方块的坐标
-rv_red = [(-960, 360), (-400, 360), (-400, -360), (-960, -360)]
-rv_green = [(400, 360), (960, 360), (960, -360), (400, -360)]
-rv_blue = [(-400, 540), (400, 540), (400, 360), (-400, 360)]
-rv_yellow = [(-400, -360), (400, -360), (400, -540), (-400, -540)]
+rv_red = [(-750, 250), (-250, 250), (-250, -250), (-750, -250)]
+rv_green = [(250, 250), (750, 250), (750, -250), (250, -250)]
+rv_blue = [(-250, 540), (250, 540), (250, 250), (-250, 250)]
+rv_yellow = [(-250, -250), (250, -250), (250, -540), (-250, -540)]
 
 # create a Monitor object
 my_mon = monitors.Monitor(name='mon', width=55.3, distance=60, )
@@ -259,10 +263,20 @@ rect_yellow = visual.ShapeStim(win, vertices=rv_yellow, fillColor='grey', lineWi
 msg = visual.TextStim(win=win, text='', color='white', units='pix')
 
 # 打开一个CSV文件，用来写行为数据
-file_name = ''
+if len(dlg.data) > 0:
+    file_name = dlg.data[0] + '_' + dlg.data[1] + '_' + time_str + '.csv'
+else:
+    file_name = 'test' + time_str + '.csv'
+
+behavior_folder = os.path.join(os.path.dirname(__file__), 'results/expSelect/behaviorData')
+if not os.path.exists(behavior_folder):
+    os.makedirs(behavior_folder)
+
+file_name = os.path.join(behavior_folder, file_name)
+
 head_line = map(str, ['trial', 'rectangle', 'correct', 'wrong',
                       'miss', 'RT', 'trailTime'])
-sub_data = open('test.csv', 'w')
+sub_data = open(file_name, 'w')
 # 写入headline
 sub_data.write(','.join(head_line) + '\n')
 
@@ -530,7 +544,7 @@ def run_trial(pos_lists, speed_lists, trial_index):
 
     # draw a cross FIXATION
     el_tracker.sendMessage('FIXATION_SCREEN')
-    while core.getTime() - t <= 0.5:
+    while core.getTime() - t <= 1:
         msg.setText('+')
         msg.height = 50
         msg.draw()
@@ -991,6 +1005,34 @@ def run_trial(pos_lists, speed_lists, trial_index):
     sub_data.write(','.join(map(str, yellow_data)) + '\n')
 
 
+def start_test(prac_or_formal):
+    """
+    a function for run Lissajous movement  trials.
+    :param prac_or_formal: to run practice trials or formal trials.
+    :return:
+    """
+    np.random.shuffle(speed_lists)
+    trial_index = 1
+    if prac_or_formal == 'prac':
+        random.Random(14).shuffle(s_rv_vertices)
+        for i in range(3):
+            trial = random.sample(s_rv_vertices, k=4)
+            logging.info('Trial: ' + str(trial_index))
+            logging.info(trial)
+            run_trial(trial, speed_lists, trial_index)
+            logging.info('--------------------------------------------')
+            trial_index += 1
+    elif prac_or_formal == 'formal':
+        random.Random(14).shuffle(s_rv_vertices)
+        for i in range(10):
+            trial = random.sample(s_rv_vertices, k=4)
+            logging.info('Trial: ' + str(trial_index))
+            logging.info(trial)
+            run_trial(trial, speed_lists, trial_index)
+            logging.info('--------------------------------------------')
+            trial_index += 1
+
+
 # Show the task instructions
 task_msg = u'你的任务是通过视线选择下落的小方块\n'
 if dummy_mode:
@@ -1007,19 +1049,39 @@ if not dummy_mode:
         print('ERROR:', err)
         el_tracker.exitCalibration()
 
-if not dummy_mode:
-    task_msg = u'校准结束，按空格开始任务'
-    show_msg(win, task_msg, wait_for_keypress=True)
+practice = visual.TextStim(win=win, text=u'练习实验', pos=(0, 150), height=30)
+formal_test = visual.TextStim(win=win, text=u'正式实验', pos=(0, -100), height=30)
+quit_text = visual.TextStim(win=win, text=u'退出实验', pos=(0, -350), color='black', bold=True, height=30)
 
-random.Random(12345).shuffle(s_rv_vertices)
-trial_index = 1
-for i in range(10):
-    s_rv_lists = random.sample(s_rv_vertices, k=4)  # random sample
-    logging.info('Trial: ' + str(trial_index))
-    logging.info(s_rv_lists)
-    run_trial(s_rv_lists, speed_lists, trial_index)
-    logging.info('--------------------------------------------')
-    trial_index += 1
+practice.draw()
+formal_test.draw()
+quit_text.draw()
+select_mouse = event.Mouse(win=win, visible=True)
+win.flip()
+
+
+def test_start():
+    """
+    a function for starting test.
+    :return:
+    """
+    while True:
+        if select_mouse.isPressedIn(practice):
+            show_instruction()
+            select_mouse.setVisible(False)
+            start_test(prac_or_formal='prac')
+            break
+        elif select_mouse.isPressedIn(formal_test):
+            show_instruction()
+            select_mouse.setVisible(False)
+            start_test(prac_or_formal='formal')
+            break
+        elif select_mouse.isPressedIn(quit_text):
+            terminate_task()
+            break
+
+
+test_start()
 
 sub_data.close()
 
