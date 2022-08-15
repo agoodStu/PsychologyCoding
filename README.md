@@ -28,8 +28,15 @@
 
 感谢王志国老师@[zhiguo-eyelab](https://github.com/zhiguo-eyelab)的帮助。
 
+### edf2asc.py
+把eyelink的.edf文件批量转为.asc文件。使用前，需要到eyelink官网安装**EyeLink Developers Kit** 
+
+### transFile.py
+一个在windows下转移文件的小脚本
+
 ## Updata Log
 
 - 二〇一九年五月十六日 22:05:52，更新eyemoveData
 - 二〇一九年六月二日 11:00:37，添加crossSpatialCueingTask
 - 2021年4月12日 20:07:01，更新SmoothPursuitTask
+- 2022-08-15 更新README.MD
