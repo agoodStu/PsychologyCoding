@@ -27,7 +27,19 @@
 6. 将TimeStamp列时间递增。即第二个试次的开始时间为第一个试次的结束时间。
 
 
+### ns_el_pre.m 
+脑电和眼动结合批处理脚本
+用于分析基于eeglab和eye-eeg联合数据的预处理脚本，具体使用方法可以参考：[csdn博客](https://blog.csdn.net/zjjoebloggs/article/details/126346626?csdn_share_tail=%7B%22type%22%3A%22blog%22%2C%22rType%22%3A%22article%22%2C%22rId%22%3A%22126346626%22%2C%22source%22%3A%22zjjoebloggs%22%7D)
+该脚本处理的脑电数据是neuroScan产生的，眼动文件是eyelink产生
 
+### BP_pre.m
+和ns_el_pre一样，只不过脑电文件时BrainProduct产生
+
+### position_gain.py
+用于计算positon gain。眼动文件由eyelink中的dataViewer导出
+
+### compute-mean-std-checkpoint.ipynb
+计算眼动数据的平均数和标准差。眼动文件由eyelink中的dataViewer导出
 
 ## Update Log
 
@@ -37,3 +49,4 @@
 - 2019-10-31 22:18:47，**大更新**：
   - 更新原有计算中的bug
   - 优化代码
+ - 2022-08-15 更新README.MD
